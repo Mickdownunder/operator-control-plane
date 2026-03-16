@@ -38,14 +38,7 @@ Operator does not own:
 
 ## Architecture Summary
 
-```mermaid
-flowchart LR
-    June["June (private orchestrator)"] --> Operator["Operator (project truth + state machine)"]
-    Operator --> Argus["ARGUS (bounded execution)"]
-    Operator --> Atlas["ATLAS (bounded validation/sandboxing)"]
-    Argus --> Operator
-    Atlas --> Operator
-```
+![Architecture overview](docs/assets/architecture-overview.svg)
 
 ## Quickstart
 
