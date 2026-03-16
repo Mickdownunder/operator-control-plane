@@ -5,17 +5,17 @@ import { RuntimeStateBadge } from "../RuntimeStateBadge";
 describe("RuntimeStateBadge", () => {
   it("renders RUNNING label", () => {
     render(<RuntimeStateBadge state="RUNNING" />);
-    expect(screen.getByText("Läuft")).toBeInTheDocument();
+    expect(screen.getByText("Running")).toBeInTheDocument();
   });
 
   it("renders DONE label", () => {
     render(<RuntimeStateBadge state="DONE" />);
-    expect(screen.getByText("Fertig")).toBeInTheDocument();
+    expect(screen.getByText("Done")).toBeInTheDocument();
   });
 
   it("renders STUCK label", () => {
     render(<RuntimeStateBadge state="STUCK" />);
-    expect(screen.getByText("Hängt")).toBeInTheDocument();
+    expect(screen.getByText("Stuck")).toBeInTheDocument();
   });
 
   it("includes step in title and body when state is RUNNING", () => {
@@ -26,7 +26,7 @@ describe("RuntimeStateBadge", () => {
 
   it("does not render step when state is not RUNNING", () => {
     render(<RuntimeStateBadge state="DONE" step="report" />);
-    expect(screen.getByText("Fertig")).toBeInTheDocument();
+    expect(screen.getByText("Done")).toBeInTheDocument();
     expect(screen.queryByText(/report/)).not.toBeInTheDocument();
   });
 });

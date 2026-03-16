@@ -1,4 +1,5 @@
-import { mkdirSync, rmSync, writeFileSync } from "fs";
+import { chmodSync, mkdirSync, rmSync, writeFileSync } from "fs";
+import os from "os";
 import path from "path";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 
@@ -11,9 +12,80 @@ vi.mock("fs/promises", async (importOriginal) => {
   };
 });
 
-const MISSIONS_ROOT = "/root/agent/workspace/logs/missions";
+const AGENT_ROOT = path.join(os.tmpdir(), "operator-command-center-tests");
+const MISSIONS_ROOT = path.join(AGENT_ROOT, "logs", "missions");
+const JUNE_BIN = path.join(AGENT_ROOT, "bin", "june-command-run");
+
+function ensureJuneCommandRunStub() {
+  mkdirSync(path.dirname(JUNE_BIN), { recursive: true });
+  writeFileSync(
+    JUNE_BIN,
+    `#!/usr/bin/env node
+const missionIdIndex = process.argv.indexOf("--mission-id");
+const missionId = missionIdIndex >= 0 ? process.argv[missionIdIndex + 1] : "";
+const payloads = {
+  "mis-1": {
+    mission_id: "mis-1",
+    objective: "Objective",
+    intent: "continue_until_done",
+    plan: "research",
+    status: "running",
+    created_at: "2026-03-08T00:00:00Z",
+    request_text: "Question",
+    runtime_budget_sec: 7200,
+    portfolio_id: "port-1",
+    campaign_id: "camp-1",
+    decision: {
+      overall: "PASS",
+      next_action: "new_test",
+      mission_status: "running",
+      decided_at: "2026-03-08T00:00:02Z"
+    },
+    envelope: {
+      overall: "PASS",
+      recommendation: "new_test",
+      atlas_overall: "PASS"
+    },
+    planning: {
+      memoryHighlights: ["bounded retries", "Prefer validated loops."]
+    },
+    timeline: [
+      { ts: "2026-03-08T00:00:02Z", name: "decision_snapshot" }
+    ],
+    tasks: []
+  },
+  "mis-show": {
+    mission_id: "mis-show",
+    objective: "Objective",
+    intent: "continue_until_done",
+    plan: "research",
+    status: "running",
+    created_at: "2026-03-08T00:00:00Z",
+    decision: {
+      overall: "PASS",
+      next_action: "new_test",
+      mission_status: "running",
+      decided_at: "2026-03-08T00:00:02Z"
+    },
+    envelope: {
+      overall: "PASS",
+      recommendation: "new_test",
+      atlas_overall: "PASS"
+    },
+    timeline: [
+      { ts: "2026-03-08T00:00:02Z", name: "decision_snapshot" }
+    ],
+    tasks: []
+  }
+};
+process.stdout.write(JSON.stringify(payloads[missionId] || payloads["mis-show"]));
+`,
+  );
+  chmodSync(JUNE_BIN, 0o755);
+}
 
 function createMissionFixture(missionId: string, fields: { archivedAt?: string | null } = {}) {
+  ensureJuneCommandRunStub();
   const missionDir = path.join(MISSIONS_ROOT, missionId);
   mkdirSync(missionDir, { recursive: true });
   writeFileSync(
@@ -132,6 +204,7 @@ describe("command-center", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    process.env.AGENT_ROOT = AGENT_ROOT;
   });
 
   afterEach(() => {
@@ -201,7 +274,7 @@ describe("command-center", () => {
 
     expect(result.ok).toBe(true);
     expect(result.command).toEqual([
-      expect.stringContaining("/root/agent/workspace/bin/june-command-run"),
+      expect.stringContaining(path.join(AGENT_ROOT, "bin", "june-command-run")),
       "--mission-id",
       "mis-show",
       "--show",

@@ -9,6 +9,6 @@ vi.mock("next/navigation", () => ({
 describe("StartCycleButton", () => {
   it("renders button with label", () => {
     render(<StartCycleButton projectId="proj-1" />);
-    expect(screen.getByRole("button", { name: /nächste phase starten/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /resume research/i })).toBeInTheDocument();
   });
 });

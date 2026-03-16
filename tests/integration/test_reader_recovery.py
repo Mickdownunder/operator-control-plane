@@ -14,7 +14,7 @@ READER = ROOT / "tools" / "research_web_reader.py"
 
 
 def test_reader_outputs_json_on_fetch_error():
-    """Reader exits 0 and outputs JSON with error_code/message when fetch fails."""
+    """Reader exits 0 and reports either a direct fetch failure or safe fallback metadata."""
     if not READER.exists():
         pytest.skip("research_web_reader.py not found")
     r = subprocess.run(
@@ -27,4 +27,15 @@ def test_reader_outputs_json_on_fetch_error():
     assert r.returncode == 0, "Reader must not exit non-zero on fetch error"
     out = json.loads(r.stdout)
     assert "url" in out
-    assert out.get("error") or out.get("error_code") or out.get("message")
+    direct_attempt = next(
+        (entry for entry in out.get("fallback_chain", []) if entry.get("method") == "direct"),
+        None,
+    )
+    assert direct_attempt is not None
+    assert "result" in direct_attempt
+    assert (
+        out.get("error")
+        or out.get("error_code")
+        or out.get("message")
+        or "fallback" in out
+    )
