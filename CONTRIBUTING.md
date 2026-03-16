@@ -13,10 +13,12 @@ should preserve the core architecture:
 ## Before You Open A PR
 
 1. Read [README.md](README.md) and [docs/README.md](docs/README.md).
-2. Prefer small, scoped changes over cross-cutting rewrites.
-3. Do not add new orchestration paths, shadow truth stores, or undocumented
+2. Read [docs/ARCHITECTURE_INVARIANTS.md](docs/ARCHITECTURE_INVARIANTS.md).
+3. Use [docs/CONTRIBUTOR_MAP.md](docs/CONTRIBUTOR_MAP.md) to pick a scoped entry point.
+4. Prefer small, scoped changes over cross-cutting rewrites.
+5. Do not add new orchestration paths, shadow truth stores, or undocumented
    event types.
-4. Avoid committing runtime artifacts, credentials, local logs, or generated
+6. Avoid committing runtime artifacts, credentials, local logs, or generated
    research output.
 
 ## Local Setup

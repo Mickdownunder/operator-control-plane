@@ -6,18 +6,22 @@ stack.
 ## Recommended Reading Order
 
 1. [ARCHITECTURE.md](ARCHITECTURE.md) - high-level system structure and boundaries
-2. [CONTROL_PLANE_SPEC.md](CONTROL_PLANE_SPEC.md) - canonical control-plane behavior
-3. [EXPERIMENT_LANE_CONTRACT.md](EXPERIMENT_LANE_CONTRACT.md) - bounded experiment schemas
-4. [STACK_SETUP.md](STACK_SETUP.md) - operator + argus + atlas wiring
-5. [LOCAL_RUN.md](LOCAL_RUN.md) - local setup and execution
-6. [TESTING.md](TESTING.md) - test surface and quality gates
-7. [DEPLOY.md](DEPLOY.md) - production-style deployment path
+2. [ARCHITECTURE_INVARIANTS.md](ARCHITECTURE_INVARIANTS.md) - non-negotiable system rules
+3. [CONTROL_PLANE_SPEC.md](CONTROL_PLANE_SPEC.md) - canonical control-plane behavior
+4. [EXPERIMENT_LANE_CONTRACT.md](EXPERIMENT_LANE_CONTRACT.md) - bounded experiment schemas
+5. [CONTRIBUTOR_MAP.md](CONTRIBUTOR_MAP.md) - where external contributors should start
+6. [STACK_SETUP.md](STACK_SETUP.md) - operator + argus + atlas wiring
+7. [DEMO.md](DEMO.md) - bounded 2-5 minute public demo path
+8. [LOCAL_RUN.md](LOCAL_RUN.md) - local setup and execution
+9. [TESTING.md](TESTING.md) - test surface and quality gates
+10. [DEPLOY.md](DEPLOY.md) - production-style deployment path
 
 ## Quick Navigation
 
 ### Architecture and behavior
 
 - [ARCHITECTURE.md](ARCHITECTURE.md)
+- [ARCHITECTURE_INVARIANTS.md](ARCHITECTURE_INVARIANTS.md)
 - [CONTROL_PLANE_SPEC.md](CONTROL_PLANE_SPEC.md)
 
 ### Contracts and schemas
@@ -27,7 +31,9 @@ stack.
 
 ### Setup and operation
 
+- [CONTRIBUTOR_MAP.md](CONTRIBUTOR_MAP.md)
 - [STACK_SETUP.md](STACK_SETUP.md)
+- [DEMO.md](DEMO.md)
 - [LOCAL_RUN.md](LOCAL_RUN.md)
 - [DEPLOY.md](DEPLOY.md)
 - [TESTING.md](TESTING.md)

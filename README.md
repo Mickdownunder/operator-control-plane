@@ -112,11 +112,14 @@ npm run dev
 
 - [docs/README.md](docs/README.md) - docs index and reading path
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - system architecture
+- [docs/ARCHITECTURE_INVARIANTS.md](docs/ARCHITECTURE_INVARIANTS.md) - non-negotiable architecture rules
 - [docs/CONTROL_PLANE_SPEC.md](docs/CONTROL_PLANE_SPEC.md) - control-plane contract
 - [docs/EXPERIMENT_LANE_CONTRACT.md](docs/EXPERIMENT_LANE_CONTRACT.md) - experiment lane schema
 - [docs/STACK_SETUP.md](docs/STACK_SETUP.md) - multi-repo wiring
+- [docs/DEMO.md](docs/DEMO.md) - 2-5 minute bounded public demo path
 - [docs/LOCAL_RUN.md](docs/LOCAL_RUN.md) - local operation
 - [docs/DEPLOY.md](docs/DEPLOY.md) - server deployment
+- [docs/CONTRIBUTOR_MAP.md](docs/CONTRIBUTOR_MAP.md) - high-signal contributor entry points
 
 ## Project Quality Surface
 
