@@ -1,0 +1,55 @@
+# Secrets and env
+conf/secrets.env
+*.env
+!.env.example
+
+# Runtime data
+memory/*.db
+memory/*.sqlite
+*.db
+*.sqlite
+jobs/
+logs/
+knowledge/opportunities.md
+factory/packs/
+factory/opportunities/discovered.jsonl
+factory/opportunities/opportunities.jsonl
+# Research project runtime (keep structure and code)
+research/proj-*/
+research/test/
+# Memory runtime (WAL, consolidation cache; *.db already above)
+memory/*.db-wal
+memory/*.db-shm
+memory/consolidation_last.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# Node (openclaw-bridge + ui)
+openclaw-bridge/node_modules/
+openclaw-bridge/dist/
+ui/node_modules/
+ui/.next/
+ui/.env.local
+
+# Artifacts and temp
+**/artifacts/
+*.log
+log.txt
+.cache/
+/plumber/
+ui/playwright-report/
+ui/test-results/
+
+# OS
+.DS_Store
+Thumbs.db
+.cursor/

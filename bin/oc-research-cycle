@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+OPERATOR_ROOT="${OPERATOR_ROOT:-/root/operator}"
+if [ "$#" -lt 1 ]; then
+  echo "Usage: oc-research-cycle <project_id>" >&2
+  exit 2
+fi
+project_id="$1"
+if ! printf '%s' "$project_id" | grep -Eq '^proj-[A-Za-z0-9_-]+$'; then
+  echo "project_id must match proj-*" >&2
+  exit 2
+fi
+exec bash "$OPERATOR_ROOT/tools/run-research-single-cycle.sh" "$project_id"

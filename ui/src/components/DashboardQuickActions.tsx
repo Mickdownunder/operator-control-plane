@@ -1,0 +1,83 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+
+type Action = "brain" | null;
+
+export function DashboardQuickActions() {
+  const router = useRouter();
+  const [confirmAction, setConfirmAction] = useState<Action>(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function runBrain() {
+    setLoading(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/actions/brain-cycle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goal: "Decide and execute the most impactful next action",
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMessage("Brain cycle started");
+        setConfirmAction(null);
+        router.refresh();
+      } else {
+        setMessage(data.error ?? "Request failed");
+      }
+    } catch (e) {
+      setMessage(String((e as Error).message));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleConfirm = () => {
+    if (confirmAction === "brain") runBrain();
+  };
+
+  const dialogConfig =
+    confirmAction === "brain"
+      ? { title: "Start brain cycle?", message: "The brain cycle will run in the background. Continue?" }
+      : null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <button
+        type="button"
+        onClick={() => setConfirmAction("brain")}
+        disabled={loading}
+        className="flex h-10 w-full sm:w-auto items-center justify-center rounded-sm bg-transparent border-2 border-tron-accent px-5 text-sm font-bold text-tron-accent shadow-[0_0_10px_var(--tron-glow)] transition-all hover:bg-tron-accent hover:text-black hover:shadow-[0_0_20px_var(--tron-glow)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 uppercase tracking-wider"
+      >
+        {loading && confirmAction === "brain" ? (
+          <LoadingSpinner className="inline-block" />
+        ) : (
+          "Brain Cycle"
+        )}
+      </button>
+      {message && (
+        <span className="text-sm text-tron-muted">{message}</span>
+      )}
+
+      {dialogConfig && (
+        <ConfirmDialog
+          open={!!confirmAction}
+          title={dialogConfig.title}
+          message={dialogConfig.message}
+          confirmLabel="Start"
+          cancelLabel="Cancel"
+          variant="primary"
+          onConfirm={handleConfirm}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
+    </div>
+  );
+}

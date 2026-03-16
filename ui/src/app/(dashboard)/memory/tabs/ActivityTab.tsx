@@ -1,0 +1,120 @@
+import React, { useState } from "react";
+import { Pagination } from "./Pagination";
+
+interface EpisodeRow {
+  kind: string;
+  content: string;
+  ts: string;
+}
+interface ReflectionRow {
+  job_id?: string;
+  quality: number;
+  learnings?: string;
+  ts: string;
+}
+
+export function ActivityTab({
+  episodes,
+  reflections,
+  consolidation,
+}: {
+  episodes: EpisodeRow[];
+  reflections: ReflectionRow[];
+  consolidation?: any;
+}) {
+  const [episodePage, setEpisodePage] = useState(1);
+  const [reflectionPage, setReflectionPage] = useState(1);
+  
+  const episodesPerPage = 10;
+  const reflectionsPerPage = 10;
+
+  const allEpisodes = episodes ?? [];
+  const allReflections = reflections ?? [];
+
+  const episodeTotalPages = Math.ceil(allEpisodes.length / episodesPerPage);
+  const reflectionTotalPages = Math.ceil(allReflections.length / reflectionsPerPage);
+
+  const displayedEpisodes = allEpisodes.slice((episodePage - 1) * episodesPerPage, episodePage * episodesPerPage);
+  const displayedReflections = allReflections.slice((reflectionPage - 1) * reflectionsPerPage, reflectionPage * reflectionsPerPage);
+
+  return (
+    <div className="space-y-6">
+      {consolidation && (
+        <div className="tron-panel p-4 flex flex-wrap items-center gap-4 text-sm" style={{ borderLeft: "4px solid var(--tron-success)" }}>
+          <span className="font-bold text-tron-muted">Last consolidation:</span>
+          {consolidation.ts && <span className="text-tron-dim">{new Date(consolidation.ts * 1000).toLocaleString()}</span>}
+          {consolidation.domains && <span className="text-tron-accent">Domains: {consolidation.domains.length}</span>}
+          {consolidation.synthesized_principles !== undefined && (
+            <span style={{ color: "var(--tron-success)" }}>Synthesized: {consolidation.synthesized_principles}</span>
+          )}
+          {consolidation.elapsed_sec && <span className="text-tron-dim text-xs ml-auto">Duration: {consolidation.elapsed_sec.toFixed(1)}s</span>}
+        </div>
+      )}
+      {consolidation?.domains?.some((d: { auto_prompt_optimization?: unknown }) => d.auto_prompt_optimization) && (
+        <div className="tron-panel p-4 flex flex-col gap-2 text-sm" style={{ borderLeft: "4px solid var(--tron-accent)" }}>
+          <span className="font-bold text-tron-muted">Auto prompt optimization (task set A)</span>
+          <ul className="list-none space-y-1">
+            {(consolidation.domains as Array<{ domain?: string; auto_prompt_optimization?: { winner?: string; score?: number; version_id?: string } }>)
+              .filter((d) => d.auto_prompt_optimization)
+              .map((d, i) => (
+                <li key={i} className="text-tron-text">
+                  <span className="font-mono text-tron-accent">{d.domain ?? "general"}</span>
+                  {" "}
+                  Score: <span className="font-mono">{typeof d.auto_prompt_optimization?.score === "number" ? d.auto_prompt_optimization.score.toFixed(2) : "—"}</span>
+                  {d.auto_prompt_optimization?.version_id && (
+                    <span className="text-tron-dim text-xs ml-2">({String(d.auto_prompt_optimization.version_id).slice(0, 8)}…)</span>
+                  )}
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="tron-panel p-6 flex flex-col">
+        <h2 className="mb-4 text-lg font-medium text-tron-muted">Recent Events</h2>
+        <div className="flex-1">
+          <ul className="space-y-2">
+            {displayedEpisodes.map((e: EpisodeRow, i: number) => (
+              <li key={i} className="flex gap-3 text-sm">
+                <span className="text-tron-dim shrink-0">{e.ts}</span>
+                <span className="text-tron-accent">{e.kind}</span>
+                <span className="text-tron-text">{e.content}</span>
+              </li>
+            ))}
+          </ul>
+          {allEpisodes.length === 0 && (
+            <p className="text-tron-dim">No episodes yet.</p>
+          )}
+        </div>
+        <div className="mt-auto">
+          <Pagination currentPage={episodePage} totalPages={episodeTotalPages} onPageChange={setEpisodePage} />
+        </div>
+      </div>
+      
+      <div className="tron-panel p-6 flex flex-col">
+        <h2 className="mb-4 text-lg font-medium text-tron-muted">What the system learned (reflections)</h2>
+        <div className="flex-1">
+          <ul className="space-y-3">
+            {displayedReflections.map((r: ReflectionRow, i: number) => (
+              <li key={i} className="border-l-2 border-tron-accent/30 pl-3 text-sm">
+                <span className="text-tron-dim">{r.ts}</span>
+                <span className="ml-2 text-tron-success">Q: {r.quality}</span>
+                {r.learnings != null && (
+                  <p className="mt-1 text-tron-text">{r.learnings}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+          {allReflections.length === 0 && (
+            <p className="text-tron-dim">No reflections yet.</p>
+          )}
+        </div>
+        <div className="mt-auto">
+          <Pagination currentPage={reflectionPage} totalPages={reflectionTotalPages} onPageChange={setReflectionPage} />
+        </div>
+      </div>
+    </div>
+    </div>
+  );
+}

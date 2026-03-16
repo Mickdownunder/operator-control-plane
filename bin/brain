@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+"""
+Operator Brain CLI — Cognitive core interface.
+
+Usage:
+  brain cycle [--goal "..."] [--governance 0-3]
+  brain perceive
+  brain think --goal "..."
+  brain reflect <job_dir> [--goal "..."]
+  brain plumber [--target <workflow>] [--governance 0-3]
+  brain plumber --rollback <patch_file>
+  brain plumber --list-patches
+  brain memory [--query "..."]
+  brain playbooks
+  brain quality [--workflow "..."]
+  brain cross-links [--limit N]
+  brain entities [--type person|org|tech|concept|event] [--project <id>]
+  brain principles [--limit N] [--domain D]
+  brain credibility [--limit N]
+  brain outcomes [--limit N]
+  brain decisions [--limit N]
+  brain memory-value
+  brain memory-consolidate [--min-samples N] [--min-principle-count N]
+"""
+import os
+import sys
+
+# Use venv if present so Brain has tenacity/openai (required for LLM think/reflect)
+_operator_root = os.environ.get("OPERATOR_ROOT") or os.path.expanduser("~/operator")
+_venv_python = os.path.join(_operator_root, ".venv", "bin", "python3")
+_in_venv = (hasattr(sys, "prefix") and sys.prefix != sys.base_prefix) or "/.venv/" in (sys.executable or "")
+if os.path.isfile(_venv_python) and not _in_venv:
+    os.execv(_venv_python, [_venv_python] + sys.argv)
+
+import json
+sys.path.insert(0, str(__import__("pathlib").Path.home() / "operator"))
+
+from lib.brain import Brain
+from lib.memory import Memory
+
+
+def cmd_cycle(args: list[str]):
+    goal = "Decide and execute the most impactful next action"
+    gov = 2
+    if "--goal" in args:
+        goal = args[args.index("--goal") + 1]
+    if "--governance" in args:
+        gov = int(args[args.index("--governance") + 1])
+
+    with Brain(governance_level=gov) as brain:
+        result = brain.run_cycle(goal=goal)
+        print(json.dumps(result, indent=2, default=str))
+
+
+def cmd_perceive(args: list[str]):
+    with Brain() as brain:
+        state = brain.perceive()
+        print(json.dumps(state, indent=2, default=str))
+
+
+def cmd_think(args: list[str]):
+    goal = "Decide the most impactful next action"
+    if "--goal" in args:
+        goal = args[args.index("--goal") + 1]
+
+    with Brain() as brain:
+        state = brain.perceive()
+        plan = brain.think(state, goal=goal)
+        print(json.dumps(plan, indent=2, default=str))
+
+
+def cmd_reflect(args: list[str]):
+    if not args:
+        print("Usage: brain reflect <job_dir> [--goal '...']", file=sys.stderr)
+        sys.exit(2)
+
+    job_dir = args[0]
+    goal = ""
+    if "--goal" in args:
+        goal = args[args.index("--goal") + 1]
+
+    with Brain() as brain:
+        reflection = brain.reflect_on_job(job_dir, goal=goal)
+        print(json.dumps(reflection, indent=2, default=str))
+
+
+def cmd_memory(args: list[str]):
+    with Memory() as mem:
+        if "--query" in args:
+            query = args[args.index("--query") + 1]
+            episodes = mem.search_episodes(query)
+            reflections = mem.search_reflections(query)
+            print(json.dumps({"episodes": episodes, "reflections": reflections}, indent=2, default=str))
+        else:
+            summary = mem.state_summary()
+            print(json.dumps(summary, indent=2, default=str))
+
+
+def cmd_playbooks(args: list[str]):
+    with Memory() as mem:
+        playbooks = mem.all_playbooks()
+        print(json.dumps(playbooks, indent=2, default=str))
+
+
+def cmd_quality(args: list[str]):
+    with Memory() as mem:
+        if "--workflow" in args:
+            wf = args[args.index("--workflow") + 1]
+            trend = mem.quality_trend(wf)
+            avg = mem.avg_quality(wf)
+            print(json.dumps({"workflow": wf, "avg_quality": round(avg, 3), "trend": trend}, indent=2, default=str))
+        else:
+            avg = mem.avg_quality()
+            print(json.dumps({"overall_avg_quality": round(avg, 3)}, indent=2, default=str))
+
+
+def cmd_cross_links(args: list[str]):
+    limit = 50
+    if "--limit" in args:
+        limit = int(args[args.index("--limit") + 1])
+    with Memory() as mem:
+        links = mem.get_cross_links_unnotified(limit=limit)
+        print(json.dumps({"insights": links}, indent=2, default=str))
+
+
+def cmd_entities(args: list[str]):
+    entity_type = None
+    project_id = None
+    if "--type" in args:
+        entity_type = args[args.index("--type") + 1]
+    if "--project" in args:
+        project_id = args[args.index("--project") + 1]
+    with Memory() as mem:
+        entities = mem.get_entities(entity_type=entity_type, project_id=project_id)
+        relations = mem.get_entity_relations(project_id=project_id) if project_id else mem.get_entity_relations(limit=30)
+        print(json.dumps({"entities": entities, "relations": relations}, indent=2, default=str))
+
+
+def cmd_principles(args: list[str]):
+    limit = 50
+    domain = None
+    if "--limit" in args:
+        limit = int(args[args.index("--limit") + 1])
+    if "--domain" in args:
+        domain = args[args.index("--domain") + 1]
+    with Memory() as mem:
+        principles = mem.list_principles(limit=limit, domain=domain)
+        print(json.dumps({"principles": principles}, indent=2, default=str))
+
+
+def cmd_credibility(args: list[str]):
+    limit = 50
+    if "--limit" in args:
+        limit = int(args[args.index("--limit") + 1])
+    with Memory() as mem:
+        items = mem.list_source_credibility(limit=limit)
+        print(json.dumps({"credibility": items}, indent=2, default=str))
+
+
+def cmd_outcomes(args: list[str]):
+    limit = 100
+    if "--limit" in args:
+        limit = int(args[args.index("--limit") + 1])
+    with Memory() as mem:
+        items = mem.list_project_outcomes(limit=limit)
+        total = mem.count_project_outcomes()
+        print(json.dumps({"outcomes": items, "total": total}, indent=2, default=str))
+
+
+def cmd_decisions(args: list[str]):
+    limit = 30
+    if "--limit" in args:
+        limit = int(args[args.index("--limit") + 1])
+    with Memory() as mem:
+        decisions = mem.recent_decisions(limit=limit)
+        print(json.dumps({"decisions": decisions}, indent=2, default=str))
+
+
+def cmd_strategies(args: list[str]):
+    limit = 20
+    if "--limit" in args:
+        limit = int(args[args.index("--limit") + 1])
+    domain = None
+    if "--domain" in args:
+        domain = args[args.index("--domain") + 1]
+    with Memory() as mem:
+        res = mem.list_strategy_profiles(domain=domain, limit=limit)
+        print(json.dumps({"strategies": res}, indent=2, default=str))
+
+def cmd_utility(args: list[str]):
+    limit = 50
+    if "--limit" in args:
+        limit = int(args[args.index("--limit") + 1])
+    mtype = None
+    if "--type" in args:
+        mtype = args[args.index("--type") + 1]
+    with Memory() as mem:
+        res = mem.get_top_utility(memory_type=mtype, limit=limit)
+        print(json.dumps({"utility": res}, indent=2, default=str))
+
+def cmd_graph(args: list[str]):
+    limit = 100
+    if "--limit" in args:
+        limit = int(args[args.index("--limit") + 1])
+    with Memory() as mem:
+        res = mem.get_graph_edges(limit=limit)
+        print(json.dumps({"edges": res}, indent=2, default=str))
+
+def cmd_memory_consolidate(args: list[str]):
+    """Run offline memory consolidation (empirical strategies, principle synthesis)."""
+    import subprocess
+    import os as _os
+    root = _os.path.join(_operator_root, "")
+    tool = _os.path.join(_operator_root, "tools", "memory_consolidate.py")
+    argv = [sys.executable, tool]
+    if "--min-samples" in args:
+        i = args.index("--min-samples") + 1
+        if i < len(args):
+            argv.extend(["--min-samples", args[i]])
+    if "--min-principle-count" in args:
+        i = args.index("--min-principle-count") + 1
+        if i < len(args):
+            argv.extend(["--min-principle-count", args[i]])
+    result = subprocess.run(argv, cwd=_operator_root)
+    sys.exit(result.returncode)
+
+
+def cmd_memory_value(args: list[str]):
+    with Memory() as mem:
+        score = mem.get_memory_value_score()
+        print(json.dumps(score, indent=2, default=str))
+
+
+def cmd_plumber(args: list[str]):
+    from lib.plumber import (
+        run_plumber, rollback_patch, list_patches,
+        get_fingerprint_stats, _load_fingerprints,
+    )
+
+    if "--rollback" in args:
+        patch_file = args[args.index("--rollback") + 1]
+        result = rollback_patch(patch_file)
+        print(json.dumps(result, indent=2, default=str))
+        return
+
+    if "--list-patches" in args:
+        patches = list_patches()
+        print(json.dumps({"patches": patches}, indent=2, default=str))
+        return
+
+    if "--fingerprints" in args:
+        stats = get_fingerprint_stats()
+        print(json.dumps(stats, indent=2, default=str))
+        return
+
+    if "--fingerprints-full" in args:
+        db = _load_fingerprints()
+        print(json.dumps(db, indent=2, default=str))
+        return
+
+    target = None
+    gov = 2
+    if "--target" in args:
+        target = args[args.index("--target") + 1]
+    if "--governance" in args:
+        gov = int(args[args.index("--governance") + 1])
+
+    report = run_plumber(
+        intent="diagnose-and-fix",
+        target=target,
+        governance_level=gov,
+    )
+    print(json.dumps(report, indent=2, default=str))
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__.strip(), file=sys.stderr)
+        sys.exit(2)
+
+    cmd = sys.argv[1]
+    args = sys.argv[2:]
+
+    commands = {
+        "cycle": cmd_cycle,
+        "perceive": cmd_perceive,
+        "think": cmd_think,
+        "reflect": cmd_reflect,
+        "plumber": cmd_plumber,
+        "memory": cmd_memory,
+        "playbooks": cmd_playbooks,
+        "quality": cmd_quality,
+        "cross-links": cmd_cross_links,
+        "entities": cmd_entities,
+        "principles": cmd_principles,
+        "credibility": cmd_credibility,
+        "outcomes": cmd_outcomes,
+        "decisions": cmd_decisions,
+        "memory-value": cmd_memory_value,
+        "memory-consolidate": cmd_memory_consolidate,
+        "strategies": cmd_strategies,
+        "utility": cmd_utility,
+        "graph": cmd_graph,
+    }
+
+    if cmd in commands:
+        commands[cmd](args)
+    else:
+        print(f"Unknown command: {cmd}", file=sys.stderr)
+        print(__doc__.strip(), file=sys.stderr)
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()

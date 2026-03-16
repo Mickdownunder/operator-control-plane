@@ -1,0 +1,14 @@
+[
+  {
+    "domain": "ai_architecture",
+    "question": "How can multi-agent systems perform continuous meta-learning without additional fine-tuning?"
+  },
+  {
+    "domain": "general",
+    "question": "Explain the strengths and weaknesses of RAG (retrieval-augmented generation) compared with long-context models."
+  },
+  {
+    "domain": "biology_ai",
+    "question": "How could the principle of epigenetic memory be transferred to neural network architecture?"
+  }
+]

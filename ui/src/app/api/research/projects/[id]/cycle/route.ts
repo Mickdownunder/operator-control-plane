@@ -1,0 +1,75 @@
+import { NextResponse } from "next/server";
+import { readFile } from "fs/promises";
+import path from "path";
+import { getSession } from "@/lib/auth/session";
+import { getResearchProject } from "@/lib/operator/research";
+import { runWorkflow } from "@/lib/operator/actions";
+import { OPERATOR_ROOT } from "@/lib/operator/config";
+
+export const dynamic = "force-dynamic";
+
+const RESEARCH_ROOT = path.join(OPERATOR_ROOT, "research");
+const PROJECT_ID_RE = /^proj-[a-zA-Z0-9_-]+$/;
+
+const HEARTBEAT_FRESH_MS = 30_000;
+
+/** Return true only for an actually fresh live cycle, not for stale progress.json leftovers. */
+async function isCycleRunning(projectId: string): Promise<boolean> {
+  if (!PROJECT_ID_RE.test(projectId)) return false;
+  const projPath = path.join(RESEARCH_ROOT, projectId);
+  const progressPath = path.join(projPath, "progress.json");
+  try {
+    const raw = await readFile(progressPath, "utf8");
+    const data = JSON.parse(raw) as { alive?: boolean; heartbeat?: string };
+    if (data.alive !== true || !data.heartbeat) return false;
+    const heartbeatMs = new Date(data.heartbeat).getTime();
+    if (!Number.isFinite(heartbeatMs)) return false;
+    return Date.now() - heartbeatMs < HEARTBEAT_FRESH_MS;
+  } catch {
+    return false;
+  }
+}
+
+export async function POST(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const ok = await getSession();
+  if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const id = (await params).id;
+  if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
+  try {
+    const project = await getResearchProject(id);
+    if (!project)
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    if (project.status === "done") {
+      return NextResponse.json(
+        { ok: false, error: "Project is already complete." },
+        { status: 400 }
+      );
+    }
+    if (await isCycleRunning(id)) {
+      return NextResponse.json(
+        { ok: false, error: "A cycle is already running for this project." },
+        { status: 409 }
+      );
+    }
+    const result = await runWorkflow("research-cycle", id);
+    if (!result.ok) {
+      return NextResponse.json(
+        { ok: false, error: result.error ?? "cycle failed" },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json({
+      ok: true,
+      jobId: result.jobId,
+      message: "Research will now continue automatically until it reaches a terminal state.",
+    });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: String((e as Error).message) },
+      { status: 500 }
+    );
+  }
+}

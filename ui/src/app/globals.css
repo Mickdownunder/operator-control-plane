@@ -1,0 +1,346 @@
+@import "tailwindcss";
+
+/* Forensic AI Research OS — Enterprise Dark (default) */
+:root {
+  --tron-bg: #0a0c11;
+  --tron-bg-panel: #0f1218;
+  --tron-border: #1c2336;
+  --tron-accent: #4475f3;
+  --tron-accent-dim: rgba(68, 117, 243, 0.12);
+  --tron-text: #dce2ef;
+  --tron-text-muted: #8a99b8;
+  --tron-text-dim: #5f7093;
+  --tron-success: #22c55e;
+  --tron-error: #f43f5e;
+  --tron-warning: #f59e0b;
+  --tron-info: #38bdf8;
+  --tron-glow: rgba(68, 117, 243, 0.08);
+  --tron-glow-accent: rgba(68, 117, 243, 0.12);
+  --tron-grid: transparent;
+  --tron-panel-hover: #141a24;
+  --tron-border-strong: #283552;
+  /* Agent Activity — per-agent accents */
+  --agent-june: #14b8a6;
+  --agent-argus: #f59e0b;
+  --agent-atlas: #22c55e;
+}
+
+/* Light mode — clean professional */
+html[data-theme="light"] {
+  --tron-bg: #f2f4f8;
+  --tron-bg-panel: #ffffff;
+  --tron-border: #dde3ee;
+  --tron-accent: #2563eb;
+  --tron-accent-dim: rgba(37, 99, 235, 0.08);
+  --tron-text: #0f1629;
+  --tron-text-muted: #475569;
+  --tron-text-dim: #64748b;
+  --tron-success: #16a34a;
+  --tron-error: #dc2626;
+  --tron-warning: #d97706;
+  --tron-info: #0284c7;
+  --tron-glow: rgba(37, 99, 235, 0.05);
+  --tron-glow-accent: rgba(37, 99, 235, 0.08);
+  --tron-grid: transparent;
+  --tron-panel-hover: #f7f9fc;
+  --tron-border-strong: #b8c4dd;
+  --agent-june: #0d9488;
+  --agent-argus: #d97706;
+  --agent-atlas: #16a34a;
+}
+
+@theme inline {
+  --color-background: var(--tron-bg);
+  --color-foreground: var(--tron-text);
+  --color-tron-bg: var(--tron-bg);
+  --color-tron-panel: var(--tron-bg-panel);
+  --color-tron-panel-hover: var(--tron-panel-hover);
+  --color-tron-border: var(--tron-border);
+  --color-tron-border-strong: var(--tron-border-strong);
+  --color-tron-accent: var(--tron-accent);
+  --color-tron-accent-dim: var(--tron-accent-dim);
+  --color-tron-text: var(--tron-text);
+  --color-tron-muted: var(--tron-text-muted);
+  --color-tron-dim: var(--tron-text-dim);
+  --color-tron-success: var(--tron-success);
+  --color-tron-error: var(--tron-error);
+  --font-sans: "Inter", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  background: var(--tron-bg);
+  color: var(--tron-text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* No scanlines, no 3D grid */
+body::before,
+body::after {
+  display: none;
+}
+
+/* Enterprise panel — clean bordered surface */
+.tron-panel {
+  background: var(--tron-bg-panel);
+  border: 1px solid var(--tron-border);
+  border-radius: 6px;
+  transition: border-color 0.15s ease;
+}
+
+/* No corner brackets, no neon glow */
+.tron-panel::before,
+.tron-panel::after {
+  display: none;
+}
+
+a.tron-panel:hover,
+button.tron-panel:hover {
+  border-color: var(--tron-accent);
+  box-shadow: none;
+  transform: none;
+}
+
+/* Removed glow effects — keep classes but neutralize */
+.text-glow-cyan,
+.text-glow-pink {
+  text-shadow: none;
+}
+
+/* Thin scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--tron-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tron-text-dim);
+}
+
+/* Page fade-in */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+/* Slide-over from right */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.22s ease-out forwards;
+}
+
+/* Agent Activity — new entry highlight */
+@keyframes agent-entry-new {
+  from { opacity: 0; transform: translateY(-8px); box-shadow: 0 0 0 1px var(--tron-accent); }
+  to   { opacity: 1; transform: translateY(0); box-shadow: none; }
+}
+.animate-agent-entry-new {
+  animation: agent-entry-new 0.4s ease-out forwards;
+}
+
+/* Live indicator pulse */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-live-pulse {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* Stronger live pulse (glow) for header and badges */
+@keyframes live-glow {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px 2px currentColor; }
+  50% { opacity: 0.85; box-shadow: 0 0 14px 4px currentColor; }
+}
+.animate-live-glow {
+  animation: live-glow 1.5s ease-in-out infinite;
+}
+
+/* Agent column pulse when this agent has the latest activity */
+@keyframes agent-column-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--tron-border); }
+  50% { box-shadow: 0 0 0 2px var(--agent-pulse-color), 0 0 20px 2px var(--agent-pulse-glow); }
+}
+.animate-agent-column-pulse {
+  animation: agent-column-pulse 2s ease-in-out infinite;
+}
+
+/* Newest entry in feed: continuous subtle pulse */
+@keyframes newest-entry-pulse {
+  0%, 100% { border-left-color: var(--newest-pulse-color); box-shadow: inset 0 0 0 0 transparent; }
+  50% { border-left-color: var(--newest-pulse-color); box-shadow: inset 2px 0 0 0 var(--newest-pulse-color); }
+}
+.animate-newest-entry-pulse {
+  animation: newest-entry-pulse 1.2s ease-in-out infinite;
+}
+
+/* Headings — no forced uppercase */
+h1, h2, h3, h4, h5, h6 {
+  text-transform: none;
+  letter-spacing: -0.015em;
+}
+
+/* ── Enterprise Table ─────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tron-text-muted);
+  border-bottom: 1px solid var(--tron-border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--tron-border);
+  color: var(--tron-text);
+  vertical-align: middle;
+}
+.data-table tbody tr:hover td {
+  background: var(--tron-panel-hover);
+}
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Report Prose ─────────────────────────────────────── */
+.report-prose {
+  font-family: "Inter", var(--font-sans), sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--tron-text);
+}
+
+.report-prose h1,
+.report-prose h2,
+.report-prose h3,
+.report-prose h4,
+.report-prose h5,
+.report-prose h6 {
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
+  color: var(--tron-text);
+  border-bottom: 1px solid var(--tron-border);
+  padding-bottom: 0.3em;
+}
+
+.report-prose p {
+  margin-bottom: 1em;
+}
+
+.report-prose li {
+  margin-bottom: 0.4em;
+}
+
+.report-prose a {
+  color: var(--tron-accent);
+  text-decoration: none;
+}
+
+.report-prose a:hover {
+  text-decoration: underline;
+}
+
+.report-prose code,
+.report-prose pre {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+.report-prose blockquote {
+  border-left: 3px solid var(--tron-accent);
+  padding-left: 1em;
+  color: var(--tron-text-muted);
+  font-style: italic;
+  margin: 1em 0;
+}
+
+/* ── VERIFIED Badge (inline in reports) ──────────────── */
+.verified-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: rgba(34, 197, 94, 0.10);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.30);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  vertical-align: middle;
+  margin: 0 2px;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.verified-badge-inline:hover {
+  background: rgba(34, 197, 94, 0.20);
+  border-color: rgba(34, 197, 94, 0.55);
+}
+
+/* ── Interactive Row (hover row highlight, no JS needed) ─ */
+.interactive-row {
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+.interactive-row:hover {
+  background: var(--tron-panel-hover);
+}
+
+/* ── Hover accent button (border + text color on hover) ── */
+.hover-accent {
+  transition: border-color 0.15s, color 0.15s;
+}
+.hover-accent:hover {
+  border-color: var(--tron-accent) !important;
+  color: var(--tron-accent) !important;
+}
+
+/* ── Stat Card ────────────────────────────────────────── */
+.stat-card {
+  background: var(--tron-bg-panel);
+  border: 1px solid var(--tron-border);
+  border-radius: 6px;
+  padding: 16px 20px;
+}
+
+/* ── Metric Label ─────────────────────────────────────── */
+.metric-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tron-text-muted);
+}

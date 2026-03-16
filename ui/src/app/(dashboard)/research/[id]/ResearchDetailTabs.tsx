@@ -1,0 +1,192 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { VerifiedClaimSlideover } from "@/components/VerifiedClaimSlideover";
+import type { TabId, Finding, Source, ReportEntry, AuditClaim, Critique, ProjectForReport } from "./types";
+import { ReportTab } from "./tabs/ReportTab";
+import { ExperimentTab } from "./tabs/ExperimentTab";
+import { CritiqueTab } from "./tabs/CritiqueTab";
+import { FindingsTab } from "./tabs/FindingsTab";
+import { SourcesTab } from "./tabs/SourcesTab";
+import { HistoryTab } from "./tabs/HistoryTab";
+import { AuditTab } from "./tabs/AuditTab";
+import { EntityGraphTab } from "./tabs/EntityGraphTab";
+
+export function ResearchDetailTabs({
+  projectId,
+  initialMarkdown,
+  hasPdf = false,
+  project,
+}: {
+  projectId: string;
+  initialMarkdown: string | null;
+  hasPdf?: boolean;
+  project?: ProjectForReport | null;
+}) {
+  const [activeTab, setActiveTab] = useState<TabId>("report");
+  const [findings, setFindings] = useState<Finding[] | null>(null);
+  const [sources, setSources] = useState<Source[] | null>(null);
+  const [reports, setReports] = useState<ReportEntry[] | null>(null);
+  const [auditClaims, setAuditClaims] = useState<AuditClaim[] | null>(null);
+  const [critique, setCritique] = useState<Critique | null>(null);
+  const [experiment, setExperiment] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState<Record<TabId, boolean>>({
+    report: false,
+    experiment: false,
+    critique: false,
+    findings: false,
+    sources: false,
+    verlauf: false,
+    audit: false,
+    knowledge_map: false,
+  });
+  const [slideoverTarget, setSlideoverTarget] = useState<{ open: boolean; claimId?: string }>({ open: false });
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- lazy-load per tab */
+    if (activeTab === "findings" && findings === null) {
+      setLoading((l) => ({ ...l, findings: true }));
+      fetch(`/api/research/projects/${projectId}/findings`)
+        .then((r) => r.json())
+        .then((d) => setFindings(d.findings ?? []))
+        .finally(() => setLoading((l) => ({ ...l, findings: false })));
+    }
+    if (activeTab === "sources" && sources === null) {
+      setLoading((l) => ({ ...l, sources: true }));
+      fetch(`/api/research/projects/${projectId}/sources`)
+        .then((r) => r.json())
+        .then((d) => setSources(d.sources ?? []))
+        .finally(() => setLoading((l) => ({ ...l, sources: false })));
+    }
+    if (activeTab === "verlauf" && reports === null) {
+      setLoading((l) => ({ ...l, verlauf: true }));
+      fetch(`/api/research/projects/${projectId}/reports`)
+        .then((r) => r.json())
+        .then((d) => setReports(d.reports ?? []))
+        .finally(() => setLoading((l) => ({ ...l, verlauf: false })));
+    }
+    if (activeTab === "audit" && auditClaims === null) {
+      setLoading((l) => ({ ...l, audit: true }));
+      fetch(`/api/research/projects/${projectId}/audit`)
+        .then((r) => r.json())
+        .then((d) => setAuditClaims(d.claims ?? []))
+        .catch(() => setAuditClaims([]))
+        .finally(() => setLoading((l) => ({ ...l, audit: false })));
+    }
+    if (activeTab === "critique" && critique === null) {
+      setLoading((l) => ({ ...l, critique: true }));
+      fetch(`/api/research/projects/${projectId}/critique`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setCritique(d))
+        .catch(() => setCritique(null))
+        .finally(() => setLoading((l) => ({ ...l, critique: false })));
+    }
+    if (activeTab === "experiment" && experiment === null) {
+      setLoading((l) => ({ ...l, experiment: true }));
+      fetch(`/api/research/projects/${projectId}/experiment`)
+        .then((r) => (r.ok ? r.json() : { experiment: null }))
+        .then((d) => setExperiment((d?.experiment ?? null) as Record<string, unknown> | null))
+        .catch(() => setExperiment(null))
+        .finally(() => setLoading((l) => ({ ...l, experiment: false })));
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [activeTab, projectId, findings, sources, reports, auditClaims, critique, experiment]);
+
+  async function sendFeedback(findingId: string, type: string) {
+    try {
+      await fetch("/api/research/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_id: projectId, type, finding_id: findingId }),
+      });
+    } catch { /* silent */ }
+  }
+
+  function downloadReport(filename: string, content: string) {
+    const blob = new Blob([content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: "report", label: "Report" },
+    { id: "knowledge_map", label: "Knowledge Map" },
+    { id: "experiment", label: "Experiment" },
+    { id: "critique", label: "Critique" },
+    { id: "findings", label: "Findings" },
+    { id: "sources", label: "Sources" },
+    { id: "verlauf", label: "History" },
+    { id: "audit", label: "Audit" },
+  ];
+
+  return (
+    <div className="space-y-0">
+      <div
+        className="flex items-end gap-px px-0 overflow-x-auto"
+        style={{ borderBottom: "1px solid var(--tron-border)" }}
+      >
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setActiveTab(t.id)}
+            className="relative shrink-0 px-4 py-2.5 text-[12px] font-semibold uppercase tracking-wider transition-colors"
+            style={{
+              color: activeTab === t.id ? "var(--tron-accent)" : "var(--tron-text-muted)",
+              background: "transparent",
+              borderBottom: activeTab === t.id ? "2px solid var(--tron-accent)" : "2px solid transparent",
+              marginBottom: "-1px",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="pt-4">
+        {activeTab === "report" && (
+          <ReportTab
+            projectId={projectId}
+            initialMarkdown={initialMarkdown}
+            hasPdf={hasPdf}
+            hasMasterDossier={!!project?.has_master_dossier}
+            project={project}
+            onVerifiedClick={(claimId) => setSlideoverTarget({ open: true, claimId })}
+            loading={loading.report}
+            onSwitchToCritique={() => setActiveTab("critique")}
+          />
+        )}
+        {activeTab === "knowledge_map" && <EntityGraphTab projectId={projectId} />}
+        {activeTab === "experiment" && (
+          <ExperimentTab experiment={experiment as never} loading={loading.experiment} />
+        )}
+        {activeTab === "critique" && (
+          <CritiqueTab critique={critique} loading={loading.critique} />
+        )}
+        {activeTab === "findings" && (
+          <FindingsTab
+            findings={findings}
+            loading={loading.findings}
+            onSendFeedback={sendFeedback}
+          />
+        )}
+        {activeTab === "sources" && <SourcesTab sources={sources} loading={loading.sources} />}
+        {activeTab === "verlauf" && (
+          <HistoryTab reports={reports} loading={loading.verlauf} onDownloadReport={downloadReport} />
+        )}
+        {activeTab === "audit" && <AuditTab auditClaims={auditClaims} loading={loading.audit} />}
+      </div>
+
+      <VerifiedClaimSlideover
+        isOpen={slideoverTarget.open}
+        onClose={() => setSlideoverTarget({ open: false })}
+        projectId={projectId}
+        targetClaimId={slideoverTarget.claimId}
+      />
+    </div>
+  );
+}

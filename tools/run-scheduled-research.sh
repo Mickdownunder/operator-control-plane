@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Run one internal research phase for every project that is not yet terminal.
+# Use with cron for autonomous multi-project research (e.g. every 6h).
+# Usage: run-scheduled-research.sh
+# Cron example: 0 */6 * * * /root/operator/tools/run-scheduled-research.sh >> /root/operator/logs/scheduled-research.log 2>&1
+set -euo pipefail
+
+OPERATOR_ROOT="${OPERATOR_ROOT:-/root/operator}"
+OP="$OPERATOR_ROOT/bin/op"
+RESEARCH_DIR="$OPERATOR_ROOT/research"
+LOG_DIR="$OPERATOR_ROOT/logs"
+
+mkdir -p "$LOG_DIR"
+
+for dir in "$RESEARCH_DIR"/proj-*/; do
+  [ -d "$dir" ] || continue
+  project_id=$(basename "$dir")
+  project_json="$dir/project.json"
+  [ -f "$project_json" ] || continue
+
+  phase=$(python3 -c "
+import json
+try:
+    d = json.load(open('$project_json'))
+    print(d.get('phase', ''), end='')
+except Exception:
+    print('', end='')
+" 2>/dev/null || true)
+
+  if [ "$phase" = "done" ]; then
+    echo "[$(date -Iseconds)] Skip $project_id (done)"
+    continue
+  fi
+
+  status=$(python3 -c "
+import json
+try:
+    d = json.load(open('$project_json'))
+    print(d.get('status', ''), end='')
+except Exception:
+    print('', end='')
+" 2>/dev/null || true)
+
+  case "$status" in
+    done|pending_review|failed*|cancelled|error|abandoned|aem_blocked)
+      echo "[$(date -Iseconds)] Skip $project_id (status: $status)"
+      continue
+      ;;
+  esac
+
+  echo "[$(date -Iseconds)] Run phase for $project_id (phase: $phase, status: $status)"
+  job_dir=$("$OP" job new --workflow research-phase --request "$project_id")
+  "$OP" run "$job_dir" --timeout 1800
+  echo "[$(date -Iseconds)] Phase run done for $project_id"
+done
+
+# Watch mode: check done projects with watch.enabled (e.g. weekly via interval_hours)
+WORKFLOWS_DIR="${OPERATOR_ROOT:-/root/operator}/workflows"
+if [ -x "$WORKFLOWS_DIR/research-watch.sh" ]; then
+  echo "[$(date -Iseconds)] Running research watch pass"
+  "$WORKFLOWS_DIR/research-watch.sh" || true
+fi
+
+# Continuous eval: offline scorecard for research projects (daily/cyclic)
+if [ -x "$WORKFLOWS_DIR/research-eval.sh" ]; then
+  echo "[$(date -Iseconds)] Running research eval pass"
+  "$WORKFLOWS_DIR/research-eval.sh" >> "$LOG_DIR/research-eval.log" 2>&1 || true
+fi
+
+# Watchdog: drift check (log if quality drop over last 3 runs)
+if [ -f "$OPERATOR_ROOT/tools/research_watchdog.py" ]; then
+  python3 "$OPERATOR_ROOT/tools/research_watchdog.py" check >> "$LOG_DIR/research-watchdog.log" 2>&1 || true
+fi

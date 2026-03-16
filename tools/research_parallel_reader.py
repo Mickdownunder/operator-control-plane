@@ -1,0 +1,295 @@
+#!/usr/bin/env python3
+"""
+Parallel URL reader for research: fetch multiple URLs with 1-12 workers (default 8), apply relevance gate, save to project.
+Replaces sequential bash while-read loops in research-cycle.sh.
+
+Usage:
+  research_parallel_reader.py <project_id> <mode> --input-file <path> [--read-limit N] [--workers N]
+
+  mode: explore | focus | counter | recovery
+  input-file: path to file with one URL or one path-to-source-JSON per line
+  read-limit: max URLs to read (default: mode-dependent)
+  workers: 1-12 (default 8)
+"""
+import json
+import os
+import re
+import subprocess
+import sys
+import threading
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+OPERATOR_ROOT = Path(os.environ.get("OPERATOR_ROOT", Path(__file__).resolve().parent.parent))
+TOOLS = OPERATOR_ROOT / "tools"
+
+
+def _get_url_from_line(line: str, proj_dir: Path) -> str:
+    """Resolve line to URL: if line is path to JSON file, load url; else treat line as URL."""
+    line = (line or "").strip()
+    if not line:
+        return ""
+    p = Path(line)
+    if p.exists() and p.suffix == ".json":
+        try:
+            d = json.loads(p.read_text())
+            return (d.get("url") or "").strip()
+        except Exception:
+            return ""
+    if "://" in line:
+        return line
+    return ""
+
+
+def _read_one_url(url: str, project_id: str) -> dict:
+    """Run research_web_reader.py for one URL; return parsed JSON result."""
+    env = os.environ.copy()
+    env["RESEARCH_PROJECT_ID"] = project_id
+    try:
+        r = subprocess.run(
+            [sys.executable, str(TOOLS / "research_web_reader.py"), url],
+            capture_output=True,
+            text=True,
+            timeout=90,
+            cwd=str(OPERATOR_ROOT),
+            env=env,
+        )
+        if r.returncode == 0 and r.stdout:
+            return json.loads(r.stdout)
+    except (json.JSONDecodeError, subprocess.TimeoutExpired, Exception):
+        pass
+    return {"url": url, "title": "", "text": "", "error": "read_failed", "error_code": "parallel_read_error"}
+
+
+def _word_set(text: str) -> set[str]:
+    """Tokenize to words (3+ alnum) for Jaccard."""
+    return set(re.findall(r"\b[a-z0-9\-\.%]{3,}\b", (text or "").lower()))
+
+
+def _compute_novelty(new_excerpt: str, existing_findings: list[dict]) -> float:
+    """Jaccard novelty vs existing excerpts: 1.0 = new, 0.0 = duplicate. No LLM."""
+    if not new_excerpt or not existing_findings:
+        return 1.0
+    new_w = _word_set(new_excerpt[:4000])
+    if not new_w:
+        return 1.0
+    max_sim = 0.0
+    for f in existing_findings:
+        ex = (f.get("excerpt") or "")[:4000]
+        if not ex:
+            continue
+        w = _word_set(ex)
+        if not w:
+            continue
+        inter = len(new_w & w)
+        union = len(new_w | w)
+        sim = inter / union if union else 0.0
+        if sim > max_sim:
+            max_sim = sim
+    return 1.0 - max_sim
+
+
+def _save_result(
+    proj_dir: Path,
+    url: str,
+    data: dict,
+    question: str,
+    mode: str,
+    rel_threshold: float,
+    source_label: str,
+    lock: threading.Lock,
+) -> bool:
+    """Apply relevance gate and write content + finding to proj_dir. Returns True if saved (success + relevant).
+    Gate only runs when RESEARCH_ENABLE_RELEVANCE_GATE=1 to avoid concurrent LLM load in parallel workers."""
+    import hashlib
+    text = (data.get("text") or data.get("abstract") or "")[:8000]
+    title = data.get("title", "")
+    relevant = True
+    rel_score = 10.0
+    enable_gate = os.environ.get("RESEARCH_ENABLE_RELEVANCE_GATE", "0") == "1"
+    skip_gate = os.environ.get("RESEARCH_SKIP_RELEVANCE_GATE", "").lower() in ("1", "true", "yes")
+    if text and question and enable_gate and not skip_gate:
+        try:
+            from tools.research_relevance_gate import check_relevance
+            gate = check_relevance(question, title, text, project_id="")
+            relevant = gate.get("relevant", True)
+            rel_score = float(gate.get("score", 10))
+            if not relevant:
+                print(f"FILTERED (score={rel_score}): {url[:80]} — {gate.get('reason','')}", file=sys.stderr)
+        except Exception as e:
+            print(f"WARN: relevance gate error: {e}", file=sys.stderr)
+    if relevant and rel_score < rel_threshold:
+        relevant = False
+        print(f"FILTERED (below threshold={rel_threshold:.2f}, score={rel_score}): {url[:80]}", file=sys.stderr)
+    if not relevant:
+        return False
+    sid = hashlib.sha256(url.encode()).hexdigest()[:12]
+    with lock:
+        (proj_dir / "sources" / f"{sid}_content.json").write_text(json.dumps(data, ensure_ascii=False))
+        if text:
+            confidence = min(0.9, 0.4 + rel_score * 0.05) if mode != "counter" else min(0.8, 0.3 + rel_score * 0.05)
+            fid = hashlib.sha256((url + text[:200]).encode()).hexdigest()[:12]
+            finding_id = f"f_{fid}"
+            search_query = os.environ.get("RESEARCH_SEARCH_QUERY", "")
+            findings_dir = proj_dir / "findings"
+            existing_findings: list[dict] = []
+            if findings_dir.exists():
+                paths = sorted(findings_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+                for p in paths[:50]:
+                    try:
+                        d = json.loads(p.read_text())
+                        existing_findings.append({"excerpt": d.get("excerpt", "")})
+                    except Exception:
+                        pass
+            novelty = _compute_novelty(text[:4000], existing_findings)
+            if novelty < 0.15:
+                print(f"LOW_NOVELTY (score={novelty:.2f}): {url[:80]}", file=sys.stderr)
+            finding_payload = {
+                "url": url, "title": title, "excerpt": text[:4000], "source": source_label,
+                "confidence": confidence, "relevance_score": rel_score,
+                "finding_id": finding_id, "search_query": search_query, "read_phase": mode,
+                "novelty_score": round(novelty, 4),
+            }
+            (proj_dir / "findings" / f"{fid}.json").write_text(json.dumps(finding_payload, ensure_ascii=False))
+    return True
+
+
+def _run_worker(
+    item: tuple[int, str],
+    proj_dir: Path,
+    question: str,
+    project_id: str,
+    mode: str,
+    rel_threshold: float,
+    source_label: str,
+    lock: threading.Lock,
+    results: list,
+    total: int,
+) -> None:
+    idx, line = item
+    url = _get_url_from_line(line, proj_dir)
+    if not url:
+        results.append((idx, -1, 0))  # skipped (not an attempt)
+        return
+    step_msg = f"Reading source {idx + 1}/{total}"
+    try:
+        from tools.research_progress import step_start
+        step_start(project_id, step_msg, idx + 1, total)
+    except Exception:
+        pass
+    data = _read_one_url(url, project_id)
+    text = (data.get("text") or data.get("abstract") or "").strip()
+    err = (data.get("error") or "").strip()
+    success = bool(text and not err)
+    saved = False
+    if success:
+        saved = _save_result(proj_dir, url, data, question, mode, rel_threshold, source_label, lock)
+    try:
+        from tools.research_progress import step_finish
+        step_finish(project_id, step_msg)
+    except Exception:
+        pass
+    results.append((idx, 1 if success else 0, 1 if saved else 0))
+
+
+def main() -> None:
+    if len(sys.argv) < 5 or "--input-file" not in sys.argv:
+        print("Usage: research_parallel_reader.py <project_id> <mode> --input-file <path> [--read-limit N] [--workers N]", file=sys.stderr)
+        sys.exit(2)
+    project_id = sys.argv[1]
+    mode = sys.argv[2].lower()
+    if mode not in ("explore", "focus", "counter", "recovery"):
+        print("mode must be explore|focus|counter|recovery", file=sys.stderr)
+        sys.exit(2)
+    idx = sys.argv.index("--input-file") + 1
+    input_file = Path(sys.argv[idx])
+    if not input_file.exists():
+        print(json.dumps({"read_attempts": 0, "read_successes": 0, "read_failures": 0}))
+        return
+    read_limit = 40
+    if "--read-limit" in sys.argv:
+        midx = sys.argv.index("--read-limit") + 1
+        if midx < len(sys.argv):
+            read_limit = max(1, int(sys.argv[midx]))
+    if mode == "focus":
+        read_limit = min(read_limit, 15)
+    elif mode == "counter":
+        read_limit = min(read_limit, 9)
+    elif mode == "recovery":
+        read_limit = min(read_limit, 10)
+    workers = 8
+    if "--workers" in sys.argv:
+        widx = sys.argv.index("--workers") + 1
+        if widx < len(sys.argv):
+            workers = max(1, min(12, int(sys.argv[widx])))
+    workers = min(workers, read_limit)
+
+    from tools.research_common import project_dir
+    proj_dir = project_dir(project_id)
+    if not proj_dir.exists():
+        print(json.dumps({"read_attempts": 0, "read_successes": 0, "read_failures": 0}))
+        return
+    project = {}
+    try:
+        project = json.loads((proj_dir / "project.json").read_text())
+    except Exception:
+        pass
+    question = (project.get("question") or "").strip()
+    rel_threshold = float(os.environ.get("RESEARCH_MEMORY_RELEVANCE_THRESHOLD", "0.50"))
+    source_label = "read" if mode != "counter" else "counter_read"
+
+    lines = [ln.strip() for ln in input_file.read_text().splitlines() if ln.strip()][:read_limit]
+    if not lines:
+        print(json.dumps({"read_attempts": 0, "read_successes": 0, "read_failures": 0}))
+        return
+
+    lock = threading.Lock()
+    results: list[tuple[int, int, int]] = []
+    try:
+        from tools.research_progress import step_summary
+    except Exception:
+        step_summary = lambda _pid, _msg, _cur, _tot: None
+
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    total = len(lines)
+    attempts = 0
+    successes = 0
+    saved_count = 0
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(
+            _run_worker,
+            (i, line),
+            proj_dir,
+            question,
+            project_id,
+            mode,
+            rel_threshold,
+            source_label,
+            lock,
+            results,
+            total,
+        ): i for i, line in enumerate(lines)}
+        completed = 0
+        for future in as_completed(futures):
+            try:
+                future.result()
+                completed += 1
+                step_summary(project_id, f"Reading source {completed}/{total}", completed, total)
+            except Exception as e:
+                print(f"WARN: parallel read worker failed: {e}", file=sys.stderr)
+    # Results list is appended by workers; sort by idx and aggregate
+    results.sort(key=lambda x: x[0])
+    for _idx, succ, saved in results:
+        if succ >= 0:  # valid URL was attempted
+            attempts += 1
+            if succ:
+                successes += 1
+        if saved:
+            saved_count += 1
+    out = {"read_attempts": attempts, "read_successes": successes, "read_failures": attempts - successes}
+    print(json.dumps(out))
+
+
+if __name__ == "__main__":
+    main()
