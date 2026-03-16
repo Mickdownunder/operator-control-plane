@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import json
 import os
+import stat
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -46,6 +47,19 @@ def run_in_sandbox(code: str, timeout_seconds: int = 30) -> SandboxResult:
         tmp_path = Path(tmpdir)
         script_path = tmp_path / "script.py"
         script_path.write_text(code, encoding="utf-8")
+        # Docker runs as uid/gid 65534. TemporaryDirectory defaults can leave the
+        # mounted path unreadable to that user on CI hosts, so open the path for
+        # read/execute traversal and make the script world-readable.
+        tmp_path.chmod(
+            stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
+            stat.S_IRGRP | stat.S_IXGRP |
+            stat.S_IROTH | stat.S_IXOTH
+        )
+        script_path.chmod(
+            stat.S_IRUSR | stat.S_IWUSR |
+            stat.S_IRGRP |
+            stat.S_IROTH
+        )
         
         def run_with_image(img: str):
             cmd = [
