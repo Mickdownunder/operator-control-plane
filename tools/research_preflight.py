@@ -36,11 +36,9 @@ def check_import(module: str) -> tuple[bool, str | None]:
         else:
             __import__(module)
         return True, None
-    except ImportError as e:
-        return False, str(e)
-    except OSError as e:
-        # Some optional modules (for example weasyprint) import successfully at the
-        # Python level but fail later when required system libraries are absent.
+    except (ImportError, OSError) as e:
+        # Optional modules such as weasyprint may fail with OSError when
+        # native libraries are not available on the host.
         return False, str(e)
 
 

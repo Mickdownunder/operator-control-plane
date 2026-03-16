@@ -8,7 +8,20 @@
 set -euo pipefail
 ROOT="${OPERATOR_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 cd "$ROOT"
-python3 -m pytest tests/ -v --tb=short \
+
+if [[ -n "${VIRTUAL_ENV:-}" && -x "${VIRTUAL_ENV}/bin/python" ]]; then
+  PYTHON_BIN="${VIRTUAL_ENV}/bin/python"
+elif [[ -x "$ROOT/.venv311/bin/python" ]]; then
+  PYTHON_BIN="$ROOT/.venv311/bin/python"
+elif [[ -x "$ROOT/.venv/bin/python" ]]; then
+  PYTHON_BIN="$ROOT/.venv/bin/python"
+elif command -v python3.11 >/dev/null 2>&1; then
+  PYTHON_BIN="$(command -v python3.11)"
+else
+  PYTHON_BIN="$(command -v python3)"
+fi
+
+"$PYTHON_BIN" -m pytest tests/ -v --tb=short \
   --cov=lib --cov=tools --no-cov-on-fail \
   --cov-report=term \
   --cov-report=xml:coverage.xml \

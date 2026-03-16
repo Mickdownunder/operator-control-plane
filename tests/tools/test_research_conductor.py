@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -17,7 +18,7 @@ def test_run_cycle_requires_explicit_master_override(tmp_path):
     )
 
     completed = subprocess.run(
-        ["python3", str(SCRIPT), "run_cycle", "proj-123"],
+        [sys.executable, str(SCRIPT), "run_cycle", "proj-123"],
         env={**os.environ, "OPERATOR_ROOT": str(operator_root)},
         cwd=str(ROOT),
         capture_output=True,

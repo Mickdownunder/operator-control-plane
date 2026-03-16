@@ -11,6 +11,8 @@ Usage:
   op retry      <job_dir|job_id> [--max-retries N]
   op healthcheck
 """
+from __future__ import annotations
+
 import os
 import sys
 
@@ -32,6 +34,7 @@ LIB  = BASE / "lib"
 
 DEFAULT_TIMEOUT = 300
 MAX_RETRIES = 3
+USAGE = __doc__.strip() if __doc__ else "Usage: op <subcommand>"
 
 sys.path.insert(0, str(BASE))
 
@@ -574,7 +577,7 @@ def cmd_healthcheck():
 
 def main():
     if len(sys.argv) < 2:
-        print(__doc__.strip(), file=sys.stderr)
+        print(USAGE, file=sys.stderr)
         sys.exit(2)
 
     cmd = sys.argv[1]
