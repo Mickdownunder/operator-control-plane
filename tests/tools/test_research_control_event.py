@@ -6,6 +6,8 @@ from pathlib import Path
 
 from tools import research_control_event as rce
 
+ROOT = Path(__file__).resolve().parents[2]
+
 
 def test_emit_research_cycle_completed_writes_project_and_global_logs(tmp_project, mock_operator_root, monkeypatch, tmp_path):
     job_dir = tmp_path / 'job'
@@ -119,7 +121,7 @@ def test_load_last_project_control_plane_event_returns_latest_matching_record(tm
 
 
 def test_research_control_event_cli_runs_without_repo_cwd(tmp_project, mock_operator_root, tmp_path):
-    script = Path('/root/operator/tools/research_control_event.py')
+    script = ROOT / "tools" / "research_control_event.py"
     run_dir = tmp_path / 'outside_repo'
     run_dir.mkdir()
 

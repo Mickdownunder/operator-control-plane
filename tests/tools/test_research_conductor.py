@@ -3,7 +3,7 @@ import os
 import subprocess
 from pathlib import Path
 
-ROOT = Path("/root/operator")
+ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "tools" / "research_conductor.py"
 
 

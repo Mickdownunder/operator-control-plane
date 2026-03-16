@@ -3,8 +3,9 @@ import os
 import stat
 import subprocess
 from pathlib import Path
+import pytest
 
-SCRIPT = "/root/agent/workspace/bin/june-control-plane-handoff"
+SCRIPT = Path(os.environ.get("JUNE_CONTROL_PLANE_HANDOFF_BIN", "/nonexistent/june-control-plane-handoff"))
 
 
 def _write_executable(path: Path, content: str) -> None:
@@ -59,6 +60,8 @@ def _append_cycle_event(operator_root: Path, project_id: str, *, event_id: str, 
 
 
 def test_june_handoff_start_initializes_project_and_runs_continue_loop(tmp_path):
+    if not SCRIPT.exists():
+        pytest.skip("june-control-plane-handoff is not available in this public repo environment")
     agent_root = tmp_path / "agent"
     operator_root = tmp_path / "operator"
     bin_dir = operator_root / "bin"
@@ -119,7 +122,7 @@ def test_june_handoff_start_initializes_project_and_runs_continue_loop(tmp_path)
     completed = subprocess.run(
         [
             "python3",
-            SCRIPT,
+            str(SCRIPT),
             "ui-research-start",
             "--question",
             "Question?",
@@ -168,6 +171,8 @@ def test_june_handoff_start_initializes_project_and_runs_continue_loop(tmp_path)
 
 
 def test_june_handoff_continue_runs_loop_until_project_done(tmp_path):
+    if not SCRIPT.exists():
+        pytest.skip("june-control-plane-handoff is not available in this public repo environment")
     agent_root = tmp_path / "agent"
     operator_root = tmp_path / "operator"
     bin_dir = operator_root / "bin"
@@ -219,7 +224,7 @@ def test_june_handoff_continue_runs_loop_until_project_done(tmp_path):
     completed = subprocess.run(
         [
             "python3",
-            SCRIPT,
+            str(SCRIPT),
             "ui-research-continue",
             "--project-id",
             "proj-456",
@@ -253,6 +258,8 @@ def test_june_handoff_continue_runs_loop_until_project_done(tmp_path):
 
 
 def test_june_handoff_generic_start_preserves_parent_and_hypothesis(tmp_path):
+    if not SCRIPT.exists():
+        pytest.skip("june-control-plane-handoff is not available in this public repo environment")
     agent_root = tmp_path / "agent"
     operator_root = tmp_path / "operator"
     bin_dir = operator_root / "bin"
@@ -283,7 +290,7 @@ def test_june_handoff_generic_start_preserves_parent_and_hypothesis(tmp_path):
     completed = subprocess.run(
         [
             "python3",
-            SCRIPT,
+            str(SCRIPT),
             "research-start",
             "--question",
             "Question?",
@@ -342,6 +349,8 @@ def test_june_handoff_generic_start_preserves_parent_and_hypothesis(tmp_path):
 
 
 def test_june_handoff_generic_continue_respects_max_cycles(tmp_path):
+    if not SCRIPT.exists():
+        pytest.skip("june-control-plane-handoff is not available in this public repo environment")
     agent_root = tmp_path / "agent"
     operator_root = tmp_path / "operator"
     bin_dir = operator_root / "bin"
@@ -388,7 +397,7 @@ def test_june_handoff_generic_continue_respects_max_cycles(tmp_path):
     completed = subprocess.run(
         [
             "python3",
-            SCRIPT,
+            str(SCRIPT),
             "research-continue",
             "--project-id",
             "proj-999",

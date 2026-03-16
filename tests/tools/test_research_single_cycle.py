@@ -4,7 +4,7 @@ import stat
 import subprocess
 from pathlib import Path
 
-ROOT = Path("/root/operator")
+ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "tools" / "run-research-single-cycle.sh"
 OC_SCRIPT = ROOT / "bin" / "oc-research-cycle"
 WORKFLOW_SCRIPT = ROOT / "workflows" / "research-cycle.sh"

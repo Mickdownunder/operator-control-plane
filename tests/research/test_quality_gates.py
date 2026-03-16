@@ -236,7 +236,7 @@ def test_gate_failed_reader_pipeline_when_zero_extractable():
 
 
 def test_reader_output_structured_error():
-    """Reader outputs valid JSON with error_code and message when error (e.g. fetch fails)."""
+    """Reader returns structured output even when direct fetching fails."""
     import subprocess
     tools = Path(__file__).resolve().parent.parent.parent / "tools"
     script = tools / "research_web_reader.py"
@@ -251,7 +251,18 @@ def test_reader_output_structured_error():
     assert r.returncode == 0, "Reader must not exit non-zero on fetch error"
     out = json.loads(r.stdout)
     assert "url" in out
-    assert out.get("error") or out.get("error_code") or out.get("message"), "Error response must include error info"
+    direct_attempt = next(
+        (entry for entry in out.get("fallback_chain", []) if entry.get("method") == "direct"),
+        None,
+    )
+    assert direct_attempt is not None
+    assert "result" in direct_attempt
+    assert (
+        out.get("error")
+        or out.get("error_code")
+        or out.get("message")
+        or out.get("fallback")
+    ), "Reader response must include either direct error details or fallback metadata"
 
 
 def test_hallucinated_verified_tag_blocked():

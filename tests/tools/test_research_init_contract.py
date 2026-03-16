@@ -2,8 +2,8 @@ import json
 import subprocess
 from pathlib import Path
 
-
-SCRIPT = "/root/operator/workflows/research-init.sh"
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "workflows" / "research-init.sh"
 
 
 def test_research_init_persists_parent_hypothesis_and_inherits_domain(tmp_path):
@@ -38,7 +38,7 @@ def test_research_init_persists_parent_hypothesis_and_inherits_domain(tmp_path):
     )
 
     completed = subprocess.run(
-        ["bash", SCRIPT, request],
+        ["bash", str(SCRIPT), request],
         cwd=str(job_dir),
         env={"OPERATOR_ROOT": str(operator_root)},
         capture_output=True,

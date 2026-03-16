@@ -18,7 +18,7 @@ test.describe("Login", () => {
     await page.goto("/login");
     await page.getByLabel(/Password/i).fill("wrong-password");
     await page.getByRole("button", { name: /Sign In|Submit/i }).click();
-    await expect(page.getByText(/login failed|error|wrong/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/invalid password|login failed|error|wrong/i)).toBeVisible({ timeout: 5000 });
     await expect(page).toHaveURL("/login");
   });
 
@@ -26,7 +26,7 @@ test.describe("Login", () => {
     await page.goto("/login");
     await page.getByLabel(/Password/i).fill(E2E_PASSWORD);
     await page.getByRole("button", { name: /Sign In|Submit/i }).click();
-    await expect(page).toHaveURL(/\/(research)?(\?.*)?$/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/($|\?)/, { timeout: 10000 });
     await expect(page).not.toHaveURL("/login");
   });
 });
