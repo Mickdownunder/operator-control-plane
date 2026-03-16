@@ -1,71 +1,81 @@
-<svg width="1720" height="620" viewBox="0 0 1720 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+<svg width="1800" height="620" viewBox="0 0 1800 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">operator-control-plane architecture overview</title>
-  <desc id="desc">June delegates to Operator. Operator owns state, control logic, and project truth, then exchanges bounded execution with ARGUS and bounded validation with ATLAS.</desc>
+  <desc id="desc">June delegates to Operator. Operator owns project truth and coordinates bounded execution through ARGUS and bounded validation through ATLAS.</desc>
   <defs>
-    <linearGradient id="canvas" x1="0" y1="0" x2="1720" y2="620" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F4F0FF"/>
-      <stop offset="0.5" stop-color="#FAFBFE"/>
-      <stop offset="1" stop-color="#F2F6FF"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1800" y2="620" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F3F0FF"/>
+      <stop offset="0.5" stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#F3F6FF"/>
     </linearGradient>
-    <linearGradient id="juneFill" x1="90" y1="180" x2="520" y2="320" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#8F7CFF"/>
-      <stop offset="1" stop-color="#B0A6FF"/>
+    <linearGradient id="juneFill" x1="90" y1="0" x2="530" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8C7CF5"/>
+      <stop offset="1" stop-color="#AAA1FF"/>
     </linearGradient>
-    <filter id="shadow" x="30" y="40" width="1660" height="520" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.14"/>
+    <filter id="shadow" x="20" y="40" width="1760" height="540" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.14"/>
     </filter>
     <marker id="arrow" markerWidth="14" markerHeight="14" refX="11" refY="7" orient="auto">
       <path d="M0 0L14 7L0 14V0Z" fill="#64748B"/>
     </marker>
+    <style>
+      .label {
+        fill: #111827;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      }
+      .muted {
+        fill: #334155;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      }
+    </style>
   </defs>
 
-  <rect width="1720" height="620" rx="36" fill="url(#canvas)"/>
+  <rect width="1800" height="620" rx="36" fill="url(#bg)"/>
 
   <g filter="url(#shadow)">
-    <rect x="80" y="215" width="450" height="128" rx="26" fill="url(#juneFill)" stroke="#6D63B5" stroke-width="4"/>
-    <text x="118" y="292" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="35" font-weight="700" letter-spacing="-0.5">June (Private Orchestrator)</text>
+    <rect x="90" y="235" width="470" height="126" rx="26" fill="url(#juneFill)" stroke="#6D63B5" stroke-width="4"/>
+    <text x="126" y="312" class="label" font-size="35" font-weight="700" letter-spacing="-0.4">June (Private Orchestrator)</text>
   </g>
 
-  <path d="M530 279H760" stroke="#94A3B8" stroke-width="5" stroke-dasharray="9 11" fill="none" marker-end="url(#arrow)"/>
-  <text x="585" y="250" fill="#334155" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="27" font-weight="500">delegates to</text>
+  <path d="M560 298H805" stroke="#94A3B8" stroke-width="5" stroke-dasharray="10 12" fill="none" marker-end="url(#arrow)"/>
+  <text x="625" y="268" class="muted" font-size="28" font-weight="500">delegates to</text>
 
   <g filter="url(#shadow)">
-    <rect x="770" y="140" width="580" height="240" rx="28" fill="#FFFFFF" stroke="#67748A" stroke-width="4"/>
-    <text x="818" y="210" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="37" font-weight="700" letter-spacing="-0.8">Operator-Control-</text>
-    <text x="818" y="253" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="37" font-weight="700" letter-spacing="-0.8">Plane</text>
+    <rect x="815" y="150" width="560" height="230" rx="28" fill="#FFFFFF" stroke="#67748A" stroke-width="4"/>
+    <text x="860" y="220" class="label" font-size="38" font-weight="700" letter-spacing="-0.8">Operator-Control-</text>
+    <text x="860" y="265" class="label" font-size="38" font-weight="700" letter-spacing="-0.8">Plane</text>
 
-    <circle cx="842" cy="312" r="6" fill="#111827"/>
-    <text x="864" y="321" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="29">State</text>
+    <circle cx="885" cy="320" r="6" fill="#111827"/>
+    <text x="907" y="329" class="label" font-size="30">State</text>
 
-    <circle cx="842" cy="356" r="6" fill="#111827"/>
-    <text x="864" y="365" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="29">Control Logic</text>
+    <circle cx="885" cy="366" r="6" fill="#111827"/>
+    <text x="907" y="375" class="label" font-size="30">Control Logic</text>
 
-    <circle cx="842" cy="400" r="6" fill="#111827"/>
-    <text x="864" y="409" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="29">Project Truth</text>
+    <circle cx="885" cy="412" r="6" fill="#111827"/>
+    <text x="907" y="421" class="label" font-size="30">Project Truth</text>
   </g>
 
-  <path d="M1350 190C1420 190 1455 125 1525 125" stroke="#64748B" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M1525 238C1455 238 1420 226 1350 226" stroke="#64748B" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M1375 205C1440 205 1475 140 1540 140" stroke="#64748B" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M1540 255C1475 255 1440 243 1375 243" stroke="#64748B" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
 
   <g filter="url(#shadow)">
-    <rect x="1490" y="76" width="190" height="152" rx="26" fill="#FFFFFF" stroke="#67748A" stroke-width="4"/>
-    <text x="1522" y="133" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="28" font-weight="700" letter-spacing="-0.5">Argus-Bounded-</text>
-    <text x="1522" y="170" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="28" font-weight="700" letter-spacing="-0.5">Executor</text>
-    <text x="1522" y="206" fill="#334155" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="23">Bounded execution runs</text>
+    <rect x="1540" y="90" width="220" height="160" rx="26" fill="#FFFFFF" stroke="#67748A" stroke-width="4"/>
+    <text x="1572" y="148" class="label" font-size="29" font-weight="700" letter-spacing="-0.4">Argus-Bounded-</text>
+    <text x="1572" y="186" class="label" font-size="29" font-weight="700" letter-spacing="-0.4">Executor</text>
+    <text x="1572" y="224" class="muted" font-size="24">Bounded execution</text>
   </g>
 
-  <path d="M1350 322C1420 322 1455 394 1525 394" stroke="#64748B" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M1525 470C1455 470 1420 458 1350 458" stroke="#64748B" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M1375 340C1440 340 1475 415 1540 415" stroke="#64748B" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M1540 500C1475 500 1440 488 1375 488" stroke="#64748B" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
 
   <g filter="url(#shadow)">
-    <rect x="1490" y="336" width="190" height="170" rx="26" fill="#FFFFFF" stroke="#67748A" stroke-width="4"/>
-    <text x="1522" y="393" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="28" font-weight="700" letter-spacing="-0.5">Atlas-Validation-</text>
-    <text x="1522" y="430" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="28" font-weight="700" letter-spacing="-0.5">Layer</text>
+    <rect x="1540" y="350" width="220" height="180" rx="26" fill="#FFFFFF" stroke="#67748A" stroke-width="4"/>
+    <text x="1572" y="408" class="label" font-size="29" font-weight="700" letter-spacing="-0.4">Atlas-Validation-</text>
+    <text x="1572" y="446" class="label" font-size="29" font-weight="700" letter-spacing="-0.4">Layer</text>
 
-    <circle cx="1539" cy="467" r="6" fill="#111827"/>
-    <text x="1561" y="475" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="23">Validation</text>
+    <circle cx="1590" cy="483" r="6" fill="#111827"/>
+    <text x="1612" y="491" class="label" font-size="24">Validation</text>
 
-    <circle cx="1539" cy="500" r="6" fill="#111827"/>
-    <text x="1561" y="508" fill="#111827" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="23">Sandboxing</text>
+    <circle cx="1590" cy="517" r="6" fill="#111827"/>
+    <text x="1612" y="525" class="label" font-size="24">Sandboxing</text>
   </g>
 </svg>
