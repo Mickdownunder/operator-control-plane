@@ -1,141 +1,156 @@
 # operator-control-plane
 
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Docs](https://img.shields.io/badge/docs-architecture%20%26%20setup-black.svg)](docs/README.md)
-[![Stack](https://img.shields.io/badge/stack-operator%20%2B%20argus%20%2B%20atlas-0a7ea4.svg)](docs/STACK_SETUP.md)
+<p align="center">
+  <strong>The stateful control plane for long-running AI research.</strong>
+</p>
 
-Kurz auf Deutsch: `operator-control-plane` ist die zentrale Operator-Schicht des
-Stacks. Sie haelt Projektwahrheit, Zustand, Research-Phasen, Evidenz und
-Kontrollereignisse zusammen. ARGUS und ATLAS liefern begrenzte Ausfuehrungs-
-und Validierungsergebnisse, aber Operator bleibt die Stelle, an der
-Projektrealitaet entsteht.
+<p align="center">
+  Operator owns project truth, phase transitions, evidence state, validation gates,
+  and the durable artifacts that turn a research question into a validated output.
+</p>
 
-`operator-control-plane` is the core state machine of the public stack.
-It is not a thin router around tools. Operator owns project truth, research
-state, evidence state, control-plane events, experiment-lane ingestion, and the
-multi-phase research lifecycle that turns a question into a validated report.
+<p align="center">
+  <a href="LICENSE"><img alt="Apache-2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
+  <a href="docs/README.md"><img alt="Architecture docs" src="https://img.shields.io/badge/docs-architecture%20%26%20setup-black.svg"></a>
+  <a href="docs/STACK_SETUP.md"><img alt="Public stack" src="https://img.shields.io/badge/stack-operator%20%2B%20argus%20%2B%20atlas-0a7ea4.svg"></a>
+</p>
 
-## What Operator Actually Does
+> Kurz auf Deutsch:
+> `operator-control-plane` ist die zentrale Operator-Schicht des Stacks.
+> Sie haelt Projektwahrheit, Research-Zustand, Evidenz, Kontrollereignisse und
+> den mehrphasigen Forschungsfluss zusammen. ARGUS und ATLAS liefern begrenzte
+> Ausfuehrungs- und Validierungsergebnisse, aber Operator bleibt die Stelle, an
+> der Projektrealitaet entsteht.
 
-Operator runs long-lived research projects through explicit phases:
+## Why This Exists
 
-- `explore`: open the search space and gather initial evidence
-- `focus`: narrow the search onto the strongest unresolved lines
-- `connect`: cross-reference findings and build structure
-- `verify`: run evidence gates, fact checks, and loop-back decisions
-- `synthesize`: generate the report from the validated state
+Most agent repos are built around a loop.
+Operator is built around ownership.
 
-This is a stateful machine, not a one-shot prompt pipeline.
-Operator keeps the canonical `project.json`, persists findings and metrics, and
-decides whether a project advances, loops back, waits for another cycle, or
-stops.
+The difference matters:
 
-## Why This Repo Exists
-
-The stack is intentionally split into bounded layers:
-
-- `June` is the private global orchestrator
-- `Operator` owns project truth and research state
-- `ARGUS` performs bounded execution attempts
-- `ATLAS` performs bounded validation and sandboxed checks
-
-That separation is enforced on purpose:
-
-- Operator is the only epistemic source of truth
-- bounded workers may write bounded artifacts only
-- UI and wrappers are clients of the control plane, not alternate planners
-- project truth and mission truth must not silently diverge
+- questions become durable projects, not transient runs
+- evidence lives in canonical project state, not scattered tool output
+- validation can block, loop back, or deepen the workflow before synthesis
+- bounded workers stay subordinate instead of becoming competing planners
+- the UI reflects the actual machine state rather than a thin wrapper over jobs
 
 If June and Operator disagree about project truth, Operator wins.
 
-## What Is In This Repository
+## The Core Idea
 
-- shell-driven research workflows and phase transitions
-- control-plane state machinery around `research/<project_id>/project.json`
-- experiment-lane instantiation and ingestion contracts
-- memory, brain, and support libraries
-- a Next.js UI for inspecting and triggering Operator state
-- backend, shell, integration, and UI tests
+Operator is not a generic orchestration shell.
+It is a state machine for research.
 
-## System Shape
+It owns:
+
+- project truth
+- evidence state
+- research status
+- control-plane events derived from state
+- experiment-lane ingestion
+- the multi-phase lifecycle from first question to validated report
+
+It does not own:
+
+- global mission intake
+- higher-level private orchestration policy
+- execution-local artifacts from bounded workers
+
+## Research Lifecycle
+
+Operator runs long-lived research through explicit phases:
+
+| Phase | Purpose |
+| --- | --- |
+| `explore` | Open the search space and gather initial evidence |
+| `focus` | Narrow onto the strongest unresolved lines |
+| `connect` | Cross-reference findings and build structure |
+| `verify` | Apply evidence gates, fact checks, and loop-back decisions |
+| `synthesize` | Generate the report from validated project state |
+
+This is why the system behaves differently from a one-shot agent demo:
+it can advance, stall, loop back, deepen, or stop based on state and evidence.
+
+## Architecture
 
 ```mermaid
 flowchart LR
-    June["June (private orchestrator)"] --> Operator["Operator control plane"]
-    Operator --> Argus["ARGUS bounded executor"]
-    Operator --> Atlas["ATLAS validation layer"]
+    June["June<br/>private orchestrator"] --> Operator["Operator<br/>project truth + state machine"]
+    Operator --> Argus["ARGUS<br/>bounded execution attempts"]
+    Operator --> Atlas["ATLAS<br/>bounded validation + sandboxing"]
     Argus --> Operator
     Atlas --> Operator
 ```
 
-## Why It Is Different From A Typical Agent Repo
+## What Makes It Interesting
 
-Most agent repositories optimize for a single loop.
-Operator is built around ownership and durability:
+### 1. Truth ownership is explicit
 
-- the research flow is phase-based rather than prompt-chain based
-- evidence gates can block synthesis and force deeper work
-- validation is explicit instead of implied
-- experiments are subordinate to project truth, not a competing lane
-- the UI reflects durable state instead of only transient runs
+`research/<project_id>/project.json` is canonical project truth.
+Workers can produce bounded artifacts, but they do not get to silently replace
+or compete with the project state.
+
+### 2. Validation is structural
+
+Verification is not an optional polish step after generation.
+Evidence gates and verification artifacts are part of the lifecycle itself.
+
+### 3. Execution is separated from sovereignty
+
+ARGUS can execute aggressively.
+ATLAS can challenge results.
+Neither becomes the truth layer.
+
+### 4. The system keeps memory and state
+
+Operator persists findings, principles, project metrics, progress, reports, and
+control-plane events across runs instead of treating each run as stateless.
 
 ## Models And Retrieval Stack
 
-The system does not force a single model across the whole research loop.
-Different parts of the pipeline are routed through different model lanes based
-on cost, depth, and verification needs.
+The system does not force one model across the entire loop.
+Different parts of the pipeline are routed through different lanes based on
+depth, verification needs, and cost.
 
-### Model usage
+### Model lanes
 
-- verification lanes route across `gemini-3.1-pro-preview`,
+- verification routes across `gemini-3.1-pro-preview`,
   `gemini-2.5-flash`, and `gpt-4.1-mini`
 - synthesis and critique use stronger reasoning lanes such as `gpt-5.4`, with
   cheaper fallbacks when appropriate
-- reasoning and extraction paths default to lighter models such as
-  `gpt-4.1-mini`
+- reasoning and extraction default to lighter models such as `gpt-4.1-mini`
 - cross-project memory indexing uses `text-embedding-3-small`
 
-This is implemented in the research toolchain rather than only described in
-docs, so spend and model usage are tied to actual project state.
+### Retrieval surface
 
-### Research sources
-
-Operator combines multiple source classes instead of depending on a single web
-search endpoint:
+Research input comes from multiple source classes:
 
 - web search via Brave Search or Serper
 - academic literature via Semantic Scholar and arXiv
 - biomedical literature via PubMed
 - structured company evidence via SEC EDGAR
-- page retrieval via direct fetch, Jina Reader, Google cache fallback,
+- content retrieval via direct fetch, Jina Reader, Google cache fallback,
   Wayback fallback, and PDF extraction
 
-The goal is to keep research state durable while still pulling from a broad
-enough source surface to support multi-phase evidence gathering and verification.
+This gives the stack a wider evidence surface than a single search adapter or a
+single-model RAG loop.
 
 ## Cost Profile
 
-The stack tracks spend at the project level across:
+Spend is tracked per project across:
 
 - LLM usage
-- search API usage
-- embedding calls
+- search APIs
+- embeddings
 
 Smaller runs often land in the tens of cents, while deeper multi-phase runs
-cost more depending on search breadth, model lane selection, and validation
+cost more depending on search breadth, selected model lanes, and validation
 depth.
 
-In my own runs, a typical lightweight cycle often lands around `$0.35`, but the
-system does not pretend that this is a fixed number. Spend is tracked per
-project and bounded through explicit budget checks.
-
-## Reading Order
-
-- [docs/README.md](docs/README.md)
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/CONTROL_PLANE_SPEC.md](docs/CONTROL_PLANE_SPEC.md)
-- [docs/EXPERIMENT_LANE_CONTRACT.md](docs/EXPERIMENT_LANE_CONTRACT.md)
-- [docs/STACK_SETUP.md](docs/STACK_SETUP.md)
+In my own lightweight runs, a typical cycle often lands around `$0.35`, but the
+system does not pretend that this is fixed. Budget checks are built into the
+research loop and can stop projects before spend runs away.
 
 ## Repository Layout
 
@@ -145,6 +160,14 @@ project and bounded through explicit budget checks.
 - `ui/`: Next.js dashboard and API routes
 - `docs/`: architecture, setup, and contract documents
 - `tests/`: Python, shell, integration, and UI coverage
+
+## Reading Order
+
+- [docs/README.md](docs/README.md)
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/CONTROL_PLANE_SPEC.md](docs/CONTROL_PLANE_SPEC.md)
+- [docs/EXPERIMENT_LANE_CONTRACT.md](docs/EXPERIMENT_LANE_CONTRACT.md)
+- [docs/STACK_SETUP.md](docs/STACK_SETUP.md)
 
 ## Quickstart
 
@@ -183,8 +206,8 @@ Vitest command above.
 
 ## Related Repositories
 
-This repo is the control-plane and truth layer of the public stack.
-It is strongest when used with the bounded execution and validation layers:
+Operator is the truth and control-plane layer of the public stack.
+It is strongest when paired with the bounded execution and validation layers:
 
 - [argus-bounded-executor](https://github.com/Mickdownunder/argus-bounded-executor)
 - [atlas-validation-layer](https://github.com/Mickdownunder/atlas-validation-layer)
