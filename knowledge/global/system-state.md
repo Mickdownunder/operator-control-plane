@@ -1,14 +1,14 @@
 # Operator System State
 
-## Paths
-- Base: /root/operator
-- Jobs: /root/operator/jobs
-- Workflows: /root/operator/workflows
-- Tools: /root/operator/tools
-- Knowledge: /root/operator/knowledge
+## Repository Layout
+- Base: repository root configured by environment
+- Jobs: job state directory under the configured base path
+- Workflows: workflow scripts under the configured base path
+- Tools: operator tool scripts under the configured base path
+- Knowledge: knowledge documents under the configured base path
 
-## Cron
-- daily autopilot-infra at 07:15
+## Scheduling
+- Recurring automation may run selected workflows in a deployment-defined schedule
 
 ## Core Workflows
 - infra-status
@@ -32,4 +32,4 @@
 - tool-backlog-improve
 
 ## Policy
-- /root/operator/conf/policy.env (default READ_ONLY)
+- policy configuration is environment-defined; default mode is READ_ONLY

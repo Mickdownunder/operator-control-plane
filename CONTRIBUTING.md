@@ -33,12 +33,12 @@ pip install -r requirements-research.txt -r requirements-test.txt
 
 ```bash
 cd ui
-npm install
+npm ci
 cp .env.local.example .env.local
 ```
 
-Set `UI_PASSWORD_HASH` and `UI_SESSION_SECRET` in `ui/.env.local` before using
-the UI locally.
+Set `OPERATOR_ROOT`, `UI_PASSWORD_HASH`, and `UI_SESSION_SECRET` in
+`ui/.env.local` before using the UI locally.
 
 ## Validation
 

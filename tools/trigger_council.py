@@ -13,6 +13,14 @@ from pathlib import Path
 
 OPERATOR_ROOT = Path(os.environ.get("OPERATOR_ROOT", "/root/operator"))
 RESEARCH = OPERATOR_ROOT / "research"
+_PROXY_ENV_VARS = (
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+)
 
 def get_status(proj_dir: Path) -> str:
     try:
@@ -110,9 +118,20 @@ def main():
 
     council_script = OPERATOR_ROOT / "tools" / "research_council.py"
     log_file = parent_dir / "council.log"
-    # Use full python path and detach properly, unsetting sandbox proxies to avoid Connection Refused
-    cmd = f"env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy nohup python3 {council_script} {parent_id} >> {log_file} 2>&1 < /dev/null &"
-    subprocess.run(cmd, shell=True, cwd=str(OPERATOR_ROOT))
+    # Detach process without shell interpolation to avoid command injection risk.
+    child_env = dict(os.environ)
+    for key in _PROXY_ENV_VARS:
+        child_env.pop(key, None)
+    with open(log_file, "a", encoding="utf-8") as log_handle:
+        subprocess.Popen(
+            [sys.executable, str(council_script), str(parent_id)],
+            cwd=str(OPERATOR_ROOT),
+            env=child_env,
+            stdin=subprocess.DEVNULL,
+            stdout=log_handle,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
 
 if __name__ == "__main__":
     main()

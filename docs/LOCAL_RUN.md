@@ -20,7 +20,7 @@ pip install -r requirements-research.txt -r requirements-test.txt
 
 ```bash
 cd /path/to/operator-control-plane/ui
-npm install
+npm ci
 cp .env.local.example .env.local
 ```
 
@@ -29,6 +29,7 @@ Set:
 - `OPERATOR_ROOT`
 - `UI_PASSWORD_HASH`
 - `UI_SESSION_SECRET`
+- optional: `UI_LOGIN_MAX_ATTEMPTS`, `UI_LOGIN_WINDOW_SECONDS`, `UI_LOGIN_LOCK_SECONDS`
 
 ## Start The UI
 

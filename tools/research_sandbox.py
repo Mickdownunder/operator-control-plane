@@ -30,6 +30,10 @@ def run_in_sandbox(code: str, timeout_seconds: int = 30) -> SandboxResult:
     - --network none: No internet access (prevents API abuse, downloading malware)
     - --memory 512m: Prevents memory bombs
     - --cpus 1: Prevents CPU hogging
+    - --read-only + tmpfs /tmp: Root filesystem is immutable with bounded temp space
+    - --cap-drop ALL + no-new-privileges: Reduces container privilege surface
+    - --pids-limit: Prevents fork bombs
+    - --user 65534:65534: Run as unprivileged user
     - timeout: Prevents infinite loops
     - read-only volume mount for the code
     """
@@ -47,6 +51,14 @@ def run_in_sandbox(code: str, timeout_seconds: int = 30) -> SandboxResult:
             cmd = [
                 "docker", "run",
                 "--rm", "--network", "none", "--memory", "512m", "--cpus", "1.0",
+                "--read-only",
+                "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
+                "--cap-drop", "ALL",
+                "--security-opt", "no-new-privileges",
+                "--pids-limit", "256",
+                "--user", "65534:65534",
+                "-e", "PYTHONDONTWRITEBYTECODE=1",
+                "-e", "TMPDIR=/tmp",
                 "-v", f"{tmp_path}:/app:ro", "-w", "/app",
                 img, "python", "script.py"
             ]

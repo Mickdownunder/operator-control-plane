@@ -83,3 +83,17 @@ def test_sandbox_generic_exception_returns_internal_error():
     assert res.exit_code == 1
     assert res.timeout is False
     assert "Internal Error" in res.stderr
+
+
+def test_sandbox_includes_hardening_flags():
+    """Docker invocation should include core hardening flags."""
+    completed = MagicMock(returncode=0, stdout="ok", stderr="")
+    with patch("tools.research_sandbox.subprocess.run", return_value=completed) as mocked_run:
+        res = run_in_sandbox("print('ok')", timeout_seconds=5)
+    assert res.exit_code == 0
+    cmd = mocked_run.call_args.args[0]
+    assert "--read-only" in cmd
+    assert "--cap-drop" in cmd and "ALL" in cmd
+    assert "--security-opt" in cmd and "no-new-privileges" in cmd
+    assert "--pids-limit" in cmd
+    assert "--user" in cmd and "65534:65534" in cmd

@@ -27,6 +27,7 @@ The UI needs:
 - `OPERATOR_ROOT`
 - `UI_PASSWORD_HASH`
 - `UI_SESSION_SECRET`
+- optional hardening: `UI_LOGIN_MAX_ATTEMPTS`, `UI_LOGIN_WINDOW_SECONDS`, `UI_LOGIN_LOCK_SECONDS`
 - optionally `PORT`
 
 You can use `ui/.env.local`:
@@ -40,8 +41,11 @@ Or export them from your shell or service manager:
 
 ```bash
 export OPERATOR_ROOT=/srv/operator-control-plane
-export UI_PASSWORD_HASH="$(echo -n 'replace-me' | sha256sum | cut -d' ' -f1)"
+export UI_PASSWORD_HASH="$(node -e 'const crypto=require(\"crypto\"); const password=\"replace-me\"; const salt=crypto.randomBytes(16); const N=16384,r=8,p=1; const hash=crypto.scryptSync(password,salt,64,{N,r,p,maxmem:128*N*r+1024*1024}); process.stdout.write(`scrypt$${N}$${r}$${p}$${salt.toString(\"hex\")}$${hash.toString(\"hex\")}`)')"
 export UI_SESSION_SECRET="$(openssl rand -hex 32)"
+export UI_LOGIN_MAX_ATTEMPTS=5
+export UI_LOGIN_WINDOW_SECONDS=300
+export UI_LOGIN_LOCK_SECONDS=300
 export PORT=3000
 ```
 

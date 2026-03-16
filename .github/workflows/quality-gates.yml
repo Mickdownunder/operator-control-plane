@@ -43,7 +43,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: ui/package-lock.json
       - name: Install UI dependencies
-        run: npm install
+        run: npm ci
       - name: Run UI tests
         run: npm test
 
@@ -76,7 +76,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: ui/package-lock.json
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
       - name: Start UI server

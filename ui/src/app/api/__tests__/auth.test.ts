@@ -13,6 +13,9 @@ vi.mock("@/lib/auth/session", () => ({
 describe("API auth login route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.UI_LOGIN_MAX_ATTEMPTS = "5";
+    process.env.UI_LOGIN_WINDOW_SECONDS = "300";
+    process.env.UI_LOGIN_LOCK_SECONDS = "300";
   });
 
   it("POST returns 400 when password missing", async () => {
@@ -60,5 +63,34 @@ describe("API auth login route", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.ok).toBe(true);
+  });
+
+  it("POST rate-limits repeated invalid password attempts", async () => {
+    process.env.UI_LOGIN_MAX_ATTEMPTS = "2";
+    process.env.UI_LOGIN_WINDOW_SECONDS = "600";
+    process.env.UI_LOGIN_LOCK_SECONDS = "600";
+    const { authConfig } = await import("@/lib/auth/config");
+    const { POST, __resetLoginRateLimitForTests } = await import("@/app/api/auth/login/route");
+    __resetLoginRateLimitForTests();
+    vi.mocked(authConfig.checkPassword).mockReturnValue(false);
+
+    const req = () =>
+      new Request("http://x", {
+        method: "POST",
+        body: JSON.stringify({ password: "wrong" }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "203.0.113.9",
+          "user-agent": "vitest-auth",
+        },
+      });
+
+    const first = await POST(req());
+    expect(first.status).toBe(401);
+    const second = await POST(req());
+    expect(second.status).toBe(429);
+    const json = await second.json();
+    expect(json.ok).toBe(false);
+    expect(json.error).toContain("Too many");
   });
 });
