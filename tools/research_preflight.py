@@ -38,6 +38,10 @@ def check_import(module: str) -> tuple[bool, str | None]:
         return True, None
     except ImportError as e:
         return False, str(e)
+    except OSError as e:
+        # Some optional modules (for example weasyprint) import successfully at the
+        # Python level but fail later when required system libraries are absent.
+        return False, str(e)
 
 
 def run_preflight() -> dict:
