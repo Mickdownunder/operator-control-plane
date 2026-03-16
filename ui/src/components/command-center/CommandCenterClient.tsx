@@ -585,7 +585,7 @@ export function CommandCenterClient({ initialData, initialSelectedMissionId }: C
                     </div>
                   </div>
                   <Link href={`/agents/command/${selectedMission.id}`} className="font-medium" style={{ color: "var(--tron-accent)" }}>
-                    Open mission detail ->
+                    Open mission detail {"->"}
                   </Link>
                 </div>
               </>

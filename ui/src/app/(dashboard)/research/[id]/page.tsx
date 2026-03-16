@@ -315,7 +315,7 @@ export default async function ResearchProjectPage({
             Council follow-ups ({followUpIds.length})
           </div>
           <p className="text-[11px] mb-3" style={{ color: "var(--tron-text-dim)" }}>
-            All generations, oldest first (Gen 1 -> Gen 2 -> ...). Every project is linked.
+            All generations, oldest first (Gen 1 {"->"} Gen 2 {"->"} ...). Every project is linked.
           </p>
           <div className="flex flex-wrap gap-2">
             {followUpIds.map((fid) => (

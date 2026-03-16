@@ -94,7 +94,7 @@ function AgentCard({
             </h3>
             {agent.delegationFrom && (
               <span className="text-[10px]" style={{ color: "var(--tron-text-dim)" }}>
-                <- delegated from {agent.delegationFrom}
+                {"<-"} delegated from {agent.delegationFrom}
               </span>
             )}
             <span
@@ -143,7 +143,7 @@ function AgentCard({
                   <>
                     <li><strong>Research</strong> - `/research-start`, `/research-cycle`, `/research-go`, `/research-feedback`</li>
                     <li><strong>Jobs</strong> - starts workflows via `op`</li>
-                    <li><strong>Command Plane</strong> - `june-command-run` compiles missions; execution flows through ARGUS -> ATLAS</li>
+                    <li><strong>Command Plane</strong> - `june-command-run` compiles missions; execution flows through ARGUS {"->"} ATLAS</li>
                   </>
                 )}
               </ul>
@@ -242,7 +242,7 @@ export default async function AgentsPage() {
             Agents & Workflows
           </h1>
           <p className="mt-1 max-w-xl text-sm" style={{ color: "var(--tron-text-muted)" }}>
-            Captain = Operator (brain/workflows). June = Telegram agent that delegates to ARGUS -> ATLAS. This page shows what the brain can run.
+            Captain = Operator (brain/workflows). June = Telegram agent that delegates to ARGUS {"->"} ATLAS. This page shows what the brain can run.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -306,7 +306,7 @@ export default async function AgentsPage() {
         </div>
         <div className="mt-3 flex flex-wrap gap-4 text-xs" style={{ color: "var(--tron-text-dim)" }}>
           <span>June: june-command-run --execute (Mission Control)</span>
-          <span>ARGUS -> ATLAS: sandbox runs, GATE_ATLAS</span>
+          <span>ARGUS {"->"} ATLAS: sandbox runs, GATE_ATLAS</span>
         </div>
       </section>
 

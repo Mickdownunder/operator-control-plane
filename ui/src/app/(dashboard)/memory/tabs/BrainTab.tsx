@@ -171,7 +171,7 @@ export function BrainTab({ decisions, loading }: { decisions: unknown[] | null; 
         Cognitive Traces
       </h2>
       <p className="mb-4 text-[12px]" style={{ color: "var(--tron-text-dim)" }}>
-        Each trace is one cycle pass (Perceive -> Understand -> Think -> Decide -> Act -> Reflect). For decisions, the shown IDs are retrieved memories for explainability.
+        Each trace is one cycle pass (Perceive {"->"} Understand {"->"} Think {"->"} Decide {"->"} Act {"->"} Reflect). For decisions, the shown IDs are retrieved memories for explainability.
       </p>
 
       <div className="space-y-6">

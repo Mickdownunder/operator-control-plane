@@ -53,12 +53,6 @@ const AGENTS = [
   { id: "atlas", name: "Atlas", role: "Sandbox", color: "#84b998", Icon: Hammer },
 ] as const;
 
-const POS: Record<string, { x: number; y: number }> = {
-  june: { x: 18, y: 30 },
-  argus: { x: 50, y: 64 },
-  atlas: { x: 82, y: 30 },
-};
-
 function entryKey(e: Entry): string {
   return `${e.ts}-${e.from}-${e.to}-${e.plan}`;
 }
@@ -98,22 +92,6 @@ function relTime(ts: string): string {
 
 function short(text: string, n = 100): string {
   return text.length > n ? `${text.slice(0, n)}…` : text;
-}
-
-function flowStyle(from: string, to: string) {
-  const a = POS[from];
-  const b = POS[to];
-  if (!a || !b) return null;
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const len = Math.sqrt(dx * dx + dy * dy);
-  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-  return {
-    left: `${a.x}%`,
-    top: `${a.y}%`,
-    width: `${len}%`,
-    transform: `rotate(${angle}deg)`,
-  };
 }
 
 function streamLabel(mode: "connecting" | "live" | "fallback" | "error") {
@@ -251,7 +229,7 @@ export default function AgentActivityPage() {
   const activeExperimentLanes = useMemo(() => projects.filter((p) => p.experiment_status === "running").length, [projects]);
 
   const healthLabel = health?.healthy ? "healthy" : "degraded";
-  const flows = entries.slice(0, 4);
+  const latestDelegations = entries.slice(0, 8);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -259,7 +237,7 @@ export default function AgentActivityPage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#dce6f0" }}>
-              Agent Command Theater
+              Agent Activity
             </h1>
             {!loading && (
               <span
@@ -276,7 +254,7 @@ export default function AgentActivityPage() {
             )}
           </div>
           <p className="mt-2 max-w-2xl text-sm" style={{ color: "#9aa9b8" }}>
-            Calm 2.5D stage with a clear decision hierarchy and a single live feed.
+            Live delegation flow between June, ARGUS, and ATLAS with job, system, and research status.
           </p>
         </div>
         <Link href="/agents" className="text-sm font-medium underline hover:no-underline" style={{ color: "#9cb3c9" }}>
@@ -294,91 +272,46 @@ export default function AgentActivityPage() {
       )}
 
       {!loading && !error && entries.length > 0 && (
-        <div className="grid grid-cols-1 xl:grid-cols-[1.7fr_1fr] gap-5">
-          <section className="rounded-2xl border p-4" style={{ borderColor: "#314154", background: "#0f1722" }}>
+        <div className="space-y-5">
+          <section className="rounded-xl border p-4" style={{ borderColor: "#324255", background: "#101925" }}>
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold" style={{ color: "#d5e2ee" }}>Collaboration Stage</h2>
+              <h2 className="text-sm font-semibold" style={{ color: "#d8e5f2" }}>Current Delegation Chain</h2>
               <span className="text-xs" style={{ color: "#8998a9" }}>
                 {streamMode === "live" ? "SSE live" : "Fallback polling"}
               </span>
             </div>
-
-            <div
-              className="relative overflow-hidden rounded-xl border"
-              style={{
-                borderColor: "#2f3e50",
-                minHeight: 560,
-                background:
-                  "radial-gradient(circle at 50% 20%, rgba(76,96,118,.22), transparent 48%), linear-gradient(180deg, #111a26, #0b111a)",
-              }}
-            >
-              <div
-                className="absolute left-1/2 top-[56%] h-[410px] w-[410px] -translate-x-1/2 -translate-y-1/2 rounded-full border"
-                style={{ borderColor: "rgba(138,153,170,.25)" }}
-              />
-              <div
-                className="absolute left-1/2 top-[56%] h-[245px] w-[245px] -translate-x-1/2 -translate-y-1/2 rounded-full border"
-                style={{ borderColor: "rgba(138,153,170,.2)" }}
-              />
-
-              {flows.map((f, i) => {
-                const style = flowStyle(f.from, f.to);
-                if (!style) return null;
-                const color = AGENTS.find((a) => a.id === f.from)?.color ?? "#9fb2c7";
-                return (
-                  <div
-                    key={`${entryKey(f)}-${i}`}
-                    className="absolute h-[2px] origin-left"
-                    style={{ ...style, background: color, opacity: i === 0 ? 0.48 : 0.24 }}
-                  />
-                );
-              })}
-
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
               {AGENTS.map((a) => {
-                const p = POS[a.id];
                 const latest = latestByAgent[a.id];
                 const Icon = a.Icon;
                 return (
-                  <div key={a.id} className="absolute" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)" }}>
-                    <div
-                      className="rounded-2xl border px-4 py-3 text-center shadow-sm"
-                      style={{ minWidth: 176, borderColor: "#3a4a5e", background: "rgba(20, 30, 42, 0.9)" }}
-                    >
-                      <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full" style={{ background: `${a.color}20`, color: a.color }}>
+                  <article key={a.id} className="rounded-xl border p-4" style={{ borderColor: "#35475c", background: "#0d1621" }}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full" style={{ background: `${a.color}20`, color: a.color }}>
                         <Icon className="h-5 w-5" />
                       </div>
-                      <div className="text-base font-semibold" style={{ color: "#dde8f4" }}>{a.name}</div>
-                      <div className="text-xs" style={{ color: "#9eb0c2" }}>{a.role}</div>
-                      <div className="mt-1 text-[10px] font-mono" style={{ color: latest?.overall === "FAIL" ? "#cf8b8b" : "#93b89a" }}>
-                        {latest?.overall === "FAIL" ? "ALERT" : latest ? "ACTIVE" : "IDLE"}
+                      <div className="min-w-0">
+                        <div className="text-base font-semibold" style={{ color: "#dde8f4" }}>{a.name}</div>
+                        <div className="text-xs" style={{ color: "#9eb0c2" }}>{a.role}</div>
                       </div>
                     </div>
-                  </div>
+                    <div className="mt-3 flex items-center justify-between text-[11px]">
+                      <span style={{ color: "#92a4b7" }}>status</span>
+                      <span style={{ color: latest?.overall === "FAIL" ? "#cf8b8b" : latest ? "#93b89a" : "#9eb0c2" }}>
+                        {latest?.overall === "FAIL" ? "alert" : latest ? "active" : "idle"}
+                      </span>
+                    </div>
+                    <div className="mt-2 rounded-lg border px-3 py-2 text-[11px] font-mono leading-relaxed" style={{ borderColor: "#324255", background: "#101925", color: "#a6b6c7" }}>
+                      {latest ? short(displayCommand(latest), 120) : "No recent command."}
+                    </div>
+                  </article>
                 );
               })}
-
-              {newest && (() => {
-                const fromPos = POS[newest.from] ?? POS.june;
-                const color = AGENTS.find((a) => a.id === newest.from)?.color ?? "#9fb2c7";
-                return (
-                  <div
-                    className="absolute w-[440px] rounded-xl border px-3 py-2 text-[12px] shadow-sm"
-                    style={{
-                      left: `calc(${fromPos.x}% - 220px)`,
-                      top: "11%",
-                      borderColor: color,
-                      background: "rgba(17, 25, 36, 0.94)",
-                      color: "#d4deea",
-                    }}
-                  >
-                    <span style={{ color }}>[{fmtTime(newest.ts)}]</span> {short(displayCommand(newest), 132)}
-                  </div>
-                );
-              })()}
             </div>
           </section>
 
-          <aside className="space-y-4">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.4fr] gap-5">
+            <aside className="space-y-4">
             <section className="grid grid-cols-2 gap-3">
               {[
                 { label: "active agents", value: stats.activeCount || 1 },
@@ -416,6 +349,7 @@ export default function AgentActivityPage() {
                 </div>
               </div>
             </section>
+            </aside>
 
             <section className="rounded-xl border overflow-hidden" style={{ borderColor: "#324255", background: "#101925" }}>
               <div className="px-4 py-2 border-b" style={{ borderColor: "#324255" }}>
@@ -443,7 +377,33 @@ export default function AgentActivityPage() {
                 ))}
               </div>
             </section>
-          </aside>
+          </div>
+
+          <section className="rounded-xl border overflow-hidden" style={{ borderColor: "#324255", background: "#101925" }}>
+            <div className="px-4 py-2 border-b" style={{ borderColor: "#324255" }}>
+              <h2 className="text-sm font-semibold" style={{ color: "#d8e5f2" }}>Latest Delegations</h2>
+            </div>
+            <div className="divide-y" style={{ borderColor: "#324255" }}>
+              {latestDelegations.map((e, i) => (
+                <div key={`${entryKey(e)}-${i}`} className="grid gap-2 px-4 py-3 lg:grid-cols-[110px_120px_1fr_120px]" style={{ color: "#a6b6c7" }}>
+                  <div className="text-[11px] font-mono" style={{ color: "#8f9faf" }}>{fmtTime(e.ts)}</div>
+                  <div className="text-[11px]">
+                    <span className="capitalize" style={{ color: "#a9c2d9" }}>{e.from}</span>
+                    <span style={{ color: "#8393a4" }}> {"->"} </span>
+                    <span className="capitalize" style={{ color: "#dbe6f1" }}>{e.to}</span>
+                  </div>
+                  <div className="text-[11px] font-mono">{displayCommand(e)}</div>
+                  <div className="text-[11px]">
+                    {e.overall ? (
+                      <span style={{ color: e.overall === "PASS" ? "#93b89a" : "#cf8b8b" }}>{e.overall}</span>
+                    ) : (
+                      <span style={{ color: "#8f9faf" }}>pending</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       )}
     </div>

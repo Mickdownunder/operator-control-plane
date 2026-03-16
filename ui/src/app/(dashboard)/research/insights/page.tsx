@@ -30,7 +30,7 @@ export default function CrossDomainInsightsPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/research" className="text-sm text-tron-muted hover:text-tron-accent transition-colors">
-          <- Back to overview
+          {"<-"} Back to overview
         </Link>
       </div>
 
