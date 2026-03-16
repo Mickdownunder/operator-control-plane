@@ -21,7 +21,7 @@ test.describe("Research", () => {
   test("research list shows header and new project form", async ({ page }) => {
     await page.goto("/research");
     await expect(page.getByRole("heading", { name: /Research Projects/i })).toBeVisible();
-    await expect(page.getByText(/New Research Project/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /New Research Project/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Start Research/i })).toBeVisible();
   });
 
@@ -36,13 +36,12 @@ test.describe("Research", () => {
     const question = `E2E Test ${Date.now()} - delete me`;
     await page.getByLabel(/What do you want to research|Research question/i).fill(question);
     await page.getByRole("button", { name: /Start Research/i }).click();
-    await expect(page.getByText(/Initializing|please wait/i).or(page.getByText(question))).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(question)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(question).first()).toBeVisible({ timeout: 15000 });
   });
 
   test("project detail: status and actions visible", async ({ page }) => {
     await page.goto("/research");
-    const projectLink = page.locator('a[href^="/research/"]').filter({ hasNot: page.getByText("Research Projects") }).first();
+    const projectLink = page.locator('a[href^="/research/proj-"]').first();
     const count = await projectLink.count();
     if (count === 0) {
       test.skip();
@@ -50,14 +49,14 @@ test.describe("Research", () => {
     }
     await projectLink.click();
     await expect(page).toHaveURL(/\/research\/[^/]+/);
-    await expect(page.getByText(/Research Projects/)).toBeVisible();
+    await expect(page.getByRole("link", { name: /Research Projects/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Delete project/i })).toBeVisible();
   });
 
   test("delete project: confirm dialog and redirect", async ({ page }) => {
     await page.goto("/research");
     const questionText = /E2E Test \d+ - delete me/;
-    const row = page.locator('a[href^="/research/"]').filter({ hasText: questionText }).first();
+    const row = page.locator('a[href^="/research/proj-"]').filter({ hasText: questionText }).first();
     const rowCount = await row.count();
     if (rowCount === 0) {
       test.skip();
