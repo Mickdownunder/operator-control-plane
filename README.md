@@ -1,5 +1,9 @@
 # operator-control-plane
 
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-architecture%20%26%20setup-black.svg)](docs/README.md)
+[![Stack](https://img.shields.io/badge/stack-operator%20%2B%20argus%20%2B%20atlas-0a7ea4.svg)](docs/STACK_SETUP.md)
+
 `operator-control-plane` is the Operator repository of a research/control-plane
 system. Operator owns project truth, research state transitions,
 control-plane events, experiment-lane state, and the durable artifacts that
@@ -20,6 +24,17 @@ This repo is intentionally opinionated:
 - bounded experiment execution and ingestion
 - a Next.js UI for inspecting and triggering Operator state
 - architecture docs and tests
+
+## System Shape
+
+```mermaid
+flowchart LR
+    June["June (private orchestrator)"] --> Operator["Operator control plane"]
+    Operator --> Argus["ARGUS bounded executor"]
+    Operator --> Atlas["ATLAS validation layer"]
+    Argus --> Operator
+    Atlas --> Operator
+```
 
 ## Public Status
 
