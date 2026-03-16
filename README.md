@@ -73,7 +73,14 @@ it can advance, stall, loop back, deepen, or stop based on state and evidence.
 
 ## Architecture
 
-![Architecture overview](docs/assets/architecture-overview.svg)
+```mermaid
+flowchart LR
+    June["June<br/>private orchestrator"] --> Operator["Operator<br/>project truth + state machine"]
+    Operator --> Argus["ARGUS<br/>bounded execution attempts"]
+    Operator --> Atlas["ATLAS<br/>bounded validation + sandboxing"]
+    Argus --> Operator
+    Atlas --> Operator
+```
 
 ## What Makes It Interesting
 
