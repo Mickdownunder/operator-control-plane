@@ -8,8 +8,8 @@ const E2E_PASSWORD = process.env.E2E_PASSWORD ?? "e2etest";
 
 async function login(page: import("@playwright/test").Page) {
   await page.goto("/login");
-  await page.getByLabel(/Passwort/i).fill(E2E_PASSWORD);
-  await page.getByRole("button", { name: /Anmelden|Einloggen|Submit/i }).click();
+  await page.getByLabel(/Password/i).fill(E2E_PASSWORD);
+  await page.getByRole("button", { name: /Sign In|Submit/i }).click();
   await expect(page).not.toHaveURL("/login", { timeout: 10000 });
 }
 

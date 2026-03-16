@@ -81,10 +81,11 @@ jobs:
         run: npx playwright install chromium --with-deps
       - name: Start UI server
         run: |
-          UI_PASSWORD_HASH=37a97310cedfe6ae001033c2b9832f6c9722b3337d3aba2ee3bb4b71756a9d72 UI_SESSION_SECRET=test-session-secret-ci npm run dev &
+          OPERATOR_ROOT="$GITHUB_WORKSPACE" UI_PASSWORD_HASH=37a97310cedfe6ae001033c2b9832f6c9722b3337d3aba2ee3bb4b71756a9d72 UI_SESSION_SECRET=test-session-secret-ci npm run dev &
           for i in $(seq 1 60); do code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || true); [ "$code" != "000" ] && break; sleep 2; done
       - name: Run E2E tests
         run: npm run test:e2e
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
           E2E_PASSWORD: e2etest
+          OPERATOR_ROOT: ${{ github.workspace }}
