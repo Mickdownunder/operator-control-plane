@@ -82,7 +82,7 @@ function normalizeWorkflowResult(payload: Record<string, unknown>): WorkflowResu
 
 async function submitResearchContinueIntent(projectId: string): Promise<WorkflowResult> {
   if (!/^proj-[a-zA-Z0-9_-]+$/.test(projectId)) {
-    return { ok: false, error: "Ungültige projectId" };
+    return { ok: false, error: "Invalid projectId" };
   }
   try {
     const payload = await runControlPlaneIntake(["ui-research-continue", "--project-id", projectId]);
@@ -110,7 +110,7 @@ export async function submitResearchStartIntent(
 ): Promise<WorkflowResult> {
   const cleanQuestion = question.trim();
   if (!cleanQuestion) {
-    return { ok: false, error: "question ist erforderlich" };
+    return { ok: false, error: "Question is required" };
   }
   const mode = VALID_RESEARCH_MODES.has(researchMode) ? researchMode : "standard";
   try {

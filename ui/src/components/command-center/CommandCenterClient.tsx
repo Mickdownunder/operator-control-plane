@@ -993,31 +993,31 @@ async function refreshData(
 function actionMessage(action: ActionName, missionId?: string) {
   switch (action) {
     case "create":
-      return `Mission ${missionId ?? ""} erstellt.`.trim();
+      return `Mission ${missionId ?? ""} created.`.trim();
     case "pause":
-      return "Mission pausiert.";
+      return "Mission paused.";
     case "resume":
-      return "Mission fortgesetzt und ausgeführt.";
+      return "Mission resumed and executed.";
     case "retry":
-      return "Mission erneut ausgelöst.";
+      return "Mission retried.";
     case "replan":
-      return "Mission neu geplant und erneut gestartet.";
+      return "Mission replanned and restarted.";
     case "show":
-      return "Mission aktualisiert.";
+      return "Mission refreshed.";
     case "archive_mission":
-      return "Mission archiviert.";
+      return "Mission archived.";
     case "unarchive_mission":
-      return "Mission zurückgeholt.";
+      return "Mission restored.";
     case "bulk_archive_done":
-      return "Abgeschlossene Missionen archiviert.";
+      return "Completed missions archived.";
     case "reset_mission":
-      return "Mission sauber zurückgesetzt.";
+      return "Mission reset cleanly.";
     case "reset_campaign":
-      return "Kampagnenzustand zurückgesetzt.";
+      return "Campaign state reset.";
     case "reset_portfolio_signals":
-      return "Portfolio-Signale zurückgesetzt.";
+      return "Portfolio signals reset.";
     default:
-      return "Aktion ausgeführt.";
+      return "Action completed.";
   }
 }
 

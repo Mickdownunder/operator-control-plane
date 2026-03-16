@@ -13,14 +13,14 @@ describe("CreateProjectForm", () => {
 
   it("renders form with question textarea and submit", () => {
     render(<CreateProjectForm />);
-    expect(screen.getByPlaceholderText(/marktgröße|vertical saas/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /forschung starten/i })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/market size|vertical saas/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /start research/i })).toBeInTheDocument();
   });
 
   it("shows error when submitting empty question", async () => {
     render(<CreateProjectForm />);
-    const submit = screen.getByRole("button", { name: /forschung starten/i });
+    const submit = screen.getByRole("button", { name: /start research/i });
     fireEvent.click(submit);
-    expect(await screen.findByText(/bitte eine forschungsfrage|forschungsfrage eingeben/i)).toBeInTheDocument();
+    expect(await screen.findByText(/enter a research question/i)).toBeInTheDocument();
   });
 });

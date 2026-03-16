@@ -164,9 +164,9 @@ export default async function CommandCenterPage() {
                 <span
                   className="font-semibold text-[11px]"
                   style={{ color: "var(--tron-warning, #f59e0b)" }}
-                  title="Cycle &gt;10min oder Reflect &gt;5min — wirken hängend"
+                  title="Cycle >10min or Reflect >5min — appears stuck"
                 >
-                  (hängend)
+                  (stuck)
                 </span>
               )}
             </div>

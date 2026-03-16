@@ -57,10 +57,10 @@ function getPhaseText(phaseId: string, tracePhases: TracePhase[], highestIndex: 
   const found = tracePhases.find((t) => t.phase?.toLowerCase() === phaseId);
   if (found) {
     const r = (found.reasoning || found.decision || "").slice(0, 300);
-    return r || "Abgeschlossen";
+    return r || "Completed";
   }
   const idx = PHASES.findIndex((p) => p.id === phaseId);
-  if (idx >= 0 && idx <= highestIndex) return "Abgeschlossen";
+  if (idx >= 0 && idx <= highestIndex) return "Completed";
   return "Wartet…";
 }
 
@@ -304,7 +304,7 @@ export function BrainRiverFlow({ latestTrace, totalCycles, totalReflections, avg
                 className="ml-auto text-[11px]"
                 style={{ color: "var(--tron-text-dim)" }}
               >
-                schließen
+                close
               </button>
             </div>
             <p className="break-words" style={{ color: "var(--tron-text-muted)" }}>
